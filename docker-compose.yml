@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  auth_service:
+    build:
+      context: auth-service-taskly
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    environment:
+      - PGHOST=postgres
+      - PGUSER=postgres
+      - PGPASSWORD=DHANPURA8
+      - PGDATABASE=dev
+      - REQUIRE_DB_INSERT
+
+  postgres:
+    image: postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_PASSWORD: DHANPURA8
+      POSTGRES_DB: dev
+      POSTGRES_USER: postgres
+    volumes:
+      - ./dbdata:/var/lib/postgresql/data
+      - ./dbinit/dev_26092021.sql:/docker-entrypoint-initdb.d/my_dump.sql'
