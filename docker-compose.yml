@@ -28,4 +28,4 @@ services:
       POSTGRES_USER: postgres
     volumes:
       - ./dbdata:/var/lib/postgresql/data
-      - ./dbinit/dev_26092021.sql:/docker-entrypoint-initdb.d/my_dump.sql'
+      - ./auth-service-taskly/dbinit/dev_26092021.sql:/docker-entrypoint-initdb.d/my_dump.sql'
