@@ -3,14 +3,28 @@
 pipeline {
     agent any
     stages {
-        stage ('Start') {
+        stage ('env') {
             steps {
-                echo "------------------------ RUNNING START ON BUILD STAGE JENKINS ------------------"
+                echo "------------------------- RUNNING ENV BUILD STAGE ON JENKINS ------------------------"
+                sh 'make env'
             }
         }
-        stage ('Build') {
+        stage ('docker') {
             steps {
-                echo "------------------------- RUNNING BUBILD STAGE JENKINS ------------------------"
+                echo "------------------------- RUNNING DOCKER BUILD STAGE ON JENKINS ------------------------"
+                sh 'make docker'
+            }
+        }
+        stage ('test') {
+            steps {
+                echo "------------------------- RUNNING TEST BUILD STAGE ON JENKINS ------------------------"
+                sh 'make test'
+            }
+        }
+        stage ('publish') {
+            steps {
+                echo "------------------------- RUNNING PUBLISH BUILD STAGE ON JENKINS ------------------------"
+                sh 'make test'
             }
         }
     }
