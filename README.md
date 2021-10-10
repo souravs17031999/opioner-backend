@@ -7,8 +7,8 @@ Frontend of [taskly app](https://github.com/souravs17031999/taskly-home) is serv
 ## New to [Hacktoberfest-2021](https://hacktoberfest.digitalocean.com/) ?
 
 * Make your first PR:
-- If you are adding a feature, Feature/<PR-TITLE>. Ex. "Feature/add-feature"
-- If you are fixing a bug, Bugfix/<Bug-title-fix>. Ex. "Bugfix/fix-bug"
+- If you are adding a feature, checkout a branch name to Feature/<PR-TITLE>. Ex. "Feature/add-feature"
+- If you are fixing a bug, checkout a branch name to Bugfix/<Bug-title-fix>. Ex. "Bugfix/fix-bug"
 - Commit message should be following [these practices](https://chris.beams.io/posts/git-commit/).
   
 * Your PR's will be reviewed within a week and be released on weekends with changes updated in changelog.MD 
