@@ -12,20 +12,21 @@ services:
     links:
       - postgres
     environment:
-      - PGHOST=postgres
-      - PGUSER=postgres
-      - PGPASSWORD=DHANPURA8
-      - PGDATABASE=dev
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE
       - REQUIRE_DB_INSERT
+      - ALLOWED_ORIGIN_HOST_PROD
 
   postgres:
     image: postgres
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_PASSWORD: DHANPURA8
-      POSTGRES_DB: dev
-      POSTGRES_USER: postgres
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_USER
     volumes:
       - ./dbdata:/var/lib/postgresql/data
       - ./auth-service-taskly/dbinit/dev_26092021.sql:/docker-entrypoint-initdb.d/my_dump.sql'
