@@ -3,12 +3,6 @@
 pipeline {
     agent any
     stages {
-        stage ('permission') {
-            steps {
-                echo "------------------------- RUNNING permissions BUILD STAGE ON JENKINS ------------------------"
-                sh "sudo chown root:jenkins /run/docker.sock"
-            }
-        }
         stage ('env') {
             steps {
                 echo "------------------------- RUNNING ENV BUILD STAGE ON JENKINS ------------------------"
