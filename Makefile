@@ -1,4 +1,4 @@
-.PHONY: test
+.PHONY: test publish
 
 env:
 	@echo "MAKE env ==========================================="
