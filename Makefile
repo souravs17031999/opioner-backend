@@ -1,6 +1,6 @@
 env:
 	@echo "MAKE env ==========================================="
-	./show-env.sh
+	./make-env.sh
 
 docker:
 	@echo "MAKE docker ==========================================="
