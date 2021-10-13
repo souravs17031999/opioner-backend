@@ -43,7 +43,7 @@ pipeline {
         stage ('publish') {
             steps {
                 echo "------------------------- RUNNING PUBLISH BUILD STAGE ON JENKINS ------------------------"
-                sh 'make test'
+                sh 'make publish'
             }
         }
     }
