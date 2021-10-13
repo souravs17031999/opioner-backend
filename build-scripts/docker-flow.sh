@@ -1,4 +1,5 @@
 echo "-------------------- INSIDE DOCKER FLOW FILE ----------------------"
 echo "--------------------- USER: "
 whoami
-docker-compose build
+echo "Building docker image for app ......"
+docker-compose -f docker-compose.yml build
