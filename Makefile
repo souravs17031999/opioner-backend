@@ -1,15 +1,15 @@
 env:
 	@echo "MAKE env ==========================================="
-	./make-env.sh
+	build-scripts/make-env.sh
 
 docker:
 	@echo "MAKE docker ==========================================="
-	./docker-flow.sh  
+	build-scripts/docker-flow.sh  
 
 test:
 	@echo "MAKE test ==========================================="
-	./run-tests.sh  
+	build-scripts/run-tests.sh  
 
 publish:
 	@echo "MAKE publish ==========================================="
-	./publish.sh  
+	build-scripts/publish.sh  
