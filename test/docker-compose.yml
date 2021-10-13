@@ -1,11 +1,16 @@
 version: "3.9"
 services:
+  test_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
   auth_service:
     build:
-      context: ./auth-service-taskly
-      dockerfile: ./Dockerfile
+      context: ../auth-service-taskly
+      dockerfile: ../auth-service-taskly/Dockerfile
     ports:
-      - "8081:8081"
+      - "8082:8081"
     depends_on:
       - postgres
     links:
@@ -22,7 +27,7 @@ services:
   postgres:
     image: postgres
     ports:
-      - "5433:5432"
+      - "5434:5432"
     environment:
       - POSTGRES_PASSWORD
       - POSTGRES_DB

@@ -1,3 +1,5 @@
+.PHONY: test
+
 env:
 	@echo "MAKE env ==========================================="
 	build-scripts/make-env.sh
