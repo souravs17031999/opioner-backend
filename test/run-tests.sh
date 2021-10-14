@@ -1,3 +1,5 @@
 echo " ------------------------ RUNNING TESTS FOR APITEST CONTAINER ------------------"
 
-exit 0
+
+
+# exit 0
