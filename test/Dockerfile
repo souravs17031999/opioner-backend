@@ -9,4 +9,4 @@ COPY . .
 RUN npm update && \
     npm install -g mocha
 
-CMD ["mocha", "apitest/test.js", "--reporter", "spec"]
+CMD ["mocha", "/apitest/test.js", "--reporter", "spec"]
