@@ -7,7 +7,12 @@ WORKDIR /apitest
 COPY . .
 
 RUN npm update && \
-    npm install -g mocha
+    npm install --save mocha chai \ 
+    npm install --save request \ 
+    npm install --save express \ 
+    npx mocha --reporter spec
+
 
 # CMD ["mocha", "/apitest/test.js", "--reporter", "spec"]
-RUN npm run test
+
+ENTRYPOINT ["sh", "/apitest/docker-entrypoint.sh"]

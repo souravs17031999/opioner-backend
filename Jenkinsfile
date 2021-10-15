@@ -13,6 +13,10 @@ pipeline {
         POSTGRES_DB = credentials('POSTGRES_DB')
         POSTGRES_USER = credentials('POSTGRES_USER')
         ALLOWED_ORIGIN_HOST_PROD = credentials('ALLOWED_ORIGIN_HOST_PROD')
+        AUTHSERVICEHOST = credentials('AUTHSERVICEHOST')
+        USERSERVICEHOST = credentials('USERSERVICEHOST')
+        PRODUCTSERVICEHOST = credentials('PRODUCTSERVICEHOST')
+        NOTIFICATIONSERVICEHOST = credentials('NOTIFICATIONSERVICEHOST')
     }
 
     stages {
