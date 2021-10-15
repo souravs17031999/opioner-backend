@@ -9,10 +9,10 @@ COPY . .
 RUN npm update && \
     npm install --save mocha chai \ 
     npm install --save request \ 
-    npm install --save express \ 
-    npx mocha --reporter spec
+    npm install --save express
 
 
 # CMD ["mocha", "/apitest/test.js", "--reporter", "spec"]
+# npx mocha --reporter spec
 
 ENTRYPOINT ["sh", "/apitest/docker-entrypoint.sh"]
