@@ -12,7 +12,7 @@ RUN npm update && \
     npm install --save express \
     npm install --save supertest
 
-RUN apt-get install -f -y postgresql-client
+RUN apk add postgresql-client
 
 # CMD ["mocha", "/apitest/test.js", "--reporter", "spec"]
 # npx mocha --reporter spec
