@@ -5,8 +5,8 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - auth_service
       - postgres
+      - auth_service
     environment:
       - AUTHSERVICEHOST
       - USERSERVICEHOST
