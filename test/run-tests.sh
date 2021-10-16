@@ -1,6 +1,6 @@
 echo " ------------------------ RUNNING TESTS FOR APITEST CONTAINER ------------------"
 ls
-cd /apitest 
+cd apitest 
 npm test
 
 # exit 0
