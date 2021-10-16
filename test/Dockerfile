@@ -9,7 +9,8 @@ COPY . .
 RUN npm update && \
     npm install --save mocha chai \ 
     npm install --save request \ 
-    npm install --save express
+    npm install --save express \
+    npm install --save supertest
 
 
 # CMD ["mocha", "/apitest/test.js", "--reporter", "spec"]
