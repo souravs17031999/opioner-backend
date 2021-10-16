@@ -9,19 +9,19 @@ var notificationServerUrl = process.env.NOTIFICATIONSERVICEHOST
 
 
 if(authServerUrl === undefined) {
-    throw new Error("AUTHSERVICEHOST URL NOT DEFINED IN ENVIRONMENT")
+    throw new Error("AUTHSERVICEHOST NOT DEFINED IN ENVIRONMENT")
 }
 
 if(userServerUrl === undefined) {
-    throw new Error("USERSERVICEHOST URL NOT DEFINED IN ENVIRONMENT")
+    throw new Error("USERSERVICEHOST NOT DEFINED IN ENVIRONMENT")
 }
 
 if(productServerUrl === undefined) {
-    throw new Error("PRODUCTSERVICEHOST URL NOT DEFINED IN ENVIRONMENT")
+    throw new Error("PRODUCTSERVICEHOST NOT DEFINED IN ENVIRONMENT")
 }
 
 if(notificationServerUrl === undefined) {
-    throw new Error("NOTIFICATIONSERVICEHOST URL NOT DEFINED IN ENVIRONMENT")
+    throw new Error("NOTIFICATIONSERVICEHOST NOT DEFINED IN ENVIRONMENT")
 }
 
 var authApi = supertest.agent(authServerUrl);
