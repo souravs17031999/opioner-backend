@@ -6,13 +6,11 @@ WORKDIR /apitest
 
 COPY . .
 
-RUN npm update && \
-    npm install --save mocha chai \ 
-    npm install --save request \ 
+RUN npm install --save mocha chai \ 
     npm install --save express \
     npm install --save supertest
 
-RUN apk add postgresql-client
+# RUN apk add postgresql-client
 
 # CMD ["mocha", "/apitest/test.js", "--reporter", "spec"]
 # npx mocha --reporter spec

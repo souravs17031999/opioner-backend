@@ -1,12 +1,10 @@
 var expect    = require("chai").expect;
-var request = require("request");
 var supertest = require("supertest");
 // Define host here 
 var authServerUrl = process.env.AUTHSERVICEHOST 
 var userServerUrl = process.env.USERSERVICEHOST 
 var productServerUrl = process.env.PRODUCTSERVICEHOST 
 var notificationServerUrl = process.env.NOTIFICATIONSERVICEHOST 
-
 
 if(authServerUrl === undefined) {
     throw new Error("AUTHSERVICEHOST NOT DEFINED IN ENVIRONMENT")
@@ -23,6 +21,11 @@ if(productServerUrl === undefined) {
 if(notificationServerUrl === undefined) {
     throw new Error("NOTIFICATIONSERVICEHOST NOT DEFINED IN ENVIRONMENT")
 }
+
+console.log("=========== AUTHSERVICEHOST: ", authServerUrl)
+console.log("=========== USERSERVICEHOST: ", userServerUrl)
+console.log("=========== PRODUCTSERVICEHOST: ", productServerUrl)
+console.log("=========== NOTIFICATIONSERVICEHOST: ", notificationServerUrl)
 
 var authApi = supertest.agent(authServerUrl);
 var userApi = supertest.agent(userServerUrl);

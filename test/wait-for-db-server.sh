@@ -1,19 +1,21 @@
 echo "------------------------- WAITING FOR SERVER FOR POSTGRES DB -------------------------"
 
-TIMEOUT=120
+TIMEOUT=20
 
-while [[ $TIMEOUT -gt 0 ]]; do 
-    pg_isready -p 5432 
+# while [[ $TIMEOUT -gt 0 ]]; do 
+#     pg_isready -p 5432 
 
-    if [[ $? -eq 0 ]]; then 
-        echo
-        echo "Server ready for postgres ..... "
-        exit 0
-    fi 
+#     if [[ $? -eq 0 ]]; then 
+#         echo
+#         echo "Server ready for postgres ..... "
+#         exit 0
+#     fi 
 
-    echo -n "."
-    sleep 1 
-    TIMEOUT=$(($TIMEOUT-1)) 
-done 
+#     echo -n "."
+#     sleep 1 
+#     TIMEOUT=$(($TIMEOUT-1)) 
+# done 
 
-echo "SERVER CONNECTION TIMEOUT FAILURE ...."
+sleep $TIMEOUT
+
+echo "..... SERVER WAITING TIME FINISHED ...."
