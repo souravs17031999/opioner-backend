@@ -4,7 +4,7 @@
   "description": "\"Testing directory for taskly-backend-api services\"",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test --reporter mocha-junit-reporter" 
+    "test": "mocha test --reporter mocha-jenkins-reporter" 
   },
   "repository": {
     "type": "git",
