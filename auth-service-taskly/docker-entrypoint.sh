@@ -6,6 +6,8 @@ export PYTHONUNBUFFERED="true"
 
 source env.sh
 
+source wait-for-db-server.sh 
+
 python3 migrations.py
 
 python3 -m flask run --host=0.0.0.0 --port=8081
