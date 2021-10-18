@@ -8,7 +8,8 @@ COPY . .
 
 RUN npm install --save mocha chai \ 
     npm install --save express \
-    npm install --save supertest
+    npm install --save supertest \ 
+    npm install --save mocha-jenkins-reporter
 
 # RUN apk add postgresql-client
 

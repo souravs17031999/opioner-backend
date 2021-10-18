@@ -3,4 +3,4 @@ echo " ------------------------ RUNNING TESTS FOR APITEST CONTAINER ------------
 cd apitest 
 npm test
 
-exit 1
+# exit 1
