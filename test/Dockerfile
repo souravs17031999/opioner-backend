@@ -6,6 +6,8 @@ WORKDIR /apitest
 
 COPY . .
 
+RUN apk --no-cache add curl
+
 RUN cd apitest && npm install
 
 # RUN apk add postgresql-client
