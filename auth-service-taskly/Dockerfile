@@ -14,6 +14,8 @@ RUN \
     python3 -m pip install -r requirements.txt --no-cache-dir && \
     apk --purge del .build-deps
 
+RUN apk --no-cache add curl
+
 COPY . .
 
 ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]
