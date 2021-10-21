@@ -2,7 +2,7 @@ echo "------------------------- WAITING FOR AUTH-SERVICE SERVER: /auth  --------
 
 sleep 30
 
-export servername=http://auth_service/auth/test
+export servername=http://auth_service:8081/auth/test
 response=$(curl --write-out '%{http_code}' $servername)
 echo "------------- reponse: $response"
 
