@@ -1,21 +1,8 @@
-echo "------------------------- WAITING FOR SERVER FOR POSTGRES DB -------------------------"
+echo "------------------------- WAITING FOR AUTH-SERVICE SERVER: /auth  -------------------------"
 
-TIMEOUT=60
+sleep 30
 
-# while [[ $TIMEOUT -gt 0 ]]; do 
-#     pg_isready -p 5432 
-
-#     if [[ $? -eq 0 ]]; then 
-#         echo
-#         echo "Server ready for postgres ..... "
-#         exit 0
-#     fi 
-
-#     echo -n "."
-#     sleep 1 
-#     TIMEOUT=$(($TIMEOUT-1)) 
-# done 
-
-sleep $TIMEOUT
+response=$(curl --write-out '%{http_code}' --silent --output /dev/null servername)
+echo "------------- reponse: $response"
 
 echo "..... SERVER WAITING TIME FINISHED ...."

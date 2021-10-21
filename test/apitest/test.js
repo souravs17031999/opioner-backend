@@ -19,47 +19,47 @@ describe('/auth services api', function() {
   
 })
 
-// describe('/user services api', function() {
+describe('/user services api', function() {
 
-//     it('should get 200 for checking the user service status', function(done) {
-//         userApi.get(`/test`)
-//         .expect(200)
-//         .end(function(err, res) {
-//             if(err) {
-//                 return done(err)
-//             }
-//             done()
-//         })
-//     })
+    it('should get 200 for checking the user service status', function(done) {
+        userApi.get(`/test`)
+        .expect(200)
+        .end(function(err, res) {
+            if(err) {
+                return done(err)
+            }
+            done()
+        })
+    })
   
-// })
+})
 
-// describe('/product services api', function() {
+describe('/product services api', function() {
 
-//     it('should get 200 for checking the product service status', function(done) {
-//         productApi.get(`/test`)
-//         .expect(200)
-//         .end(function(err, res) {
-//             if(err) {
-//                 return done(err)
-//             }
-//             done()
-//         })
-//     })
+    it('should get 200 for checking the product service status', function(done) {
+        productApi.get(`/test`)
+        .expect(200)
+        .end(function(err, res) {
+            if(err) {
+                return done(err)
+            }
+            done()
+        })
+    })
   
-// })
+})
 
-// describe('/notification services api', function() {
+describe('/notification services api', function() {
 
-//     it('should get 200 for checking the notification service status', function(done) {
-//         notificationApi.get(`/test`)
-//         .expect(200)
-//         .end(function(err, res) {
-//             if(err) {
-//                 return done(err)
-//             }
-//             done()
-//         })
-//     })
+    it('should get 200 for checking the notification service status', function(done) {
+        notificationApi.get(`/test`)
+        .expect(200)
+        .end(function(err, res) {
+            if(err) {
+                return done(err)
+            }
+            done()
+        })
+    })
   
-// })
+})

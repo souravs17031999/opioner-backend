@@ -7,7 +7,7 @@ WORKDIR /app
 COPY requirements.txt requirements.txt
 
 RUN apk add --no-cache python3-dev openssl-dev libffi-dev gcc && pip3 install --upgrade pip
-
+RUN apk add postgresql
 RUN \
     apk add --no-cache postgresql-libs && \
     apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev && \
