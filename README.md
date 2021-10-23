@@ -44,4 +44,11 @@ Frontend of [taskly app](https://github.com/souravs17031999/taskly-home) is serv
 - ALLOWED_ORIGIN_HOST_PROD
 - REQUIRE_DB_MIGRATIONS
 - REQUIRE_DB_INSERT
-- SENDGRID_API_KEY_PROD
+- SENDGRID_API_KEY_PROD    
+  
+### Notes:      
+- The actual database for app will be mounted automatically at data directory.     
+- You can use Jenkins build locally for testing your changes as it already contains `test` stage which needs to pass all the tests added.     
+- For testing purpose, it will automatically create the test database in Jenkins build and will be removed after the container stops.   
+- Jenkins CI/CD is already configured in Jenkinsfile and Makefile.    
+- We will use dockers to deploy the app in production.   
