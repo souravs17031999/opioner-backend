@@ -43,7 +43,7 @@ pipeline {
         }
         stage ('report') {
             steps {
-                junit '${WORKSPACE}/test-results/*.xml'
+                junit '${WORKSPACE}/test-results.xml'
             }
         }
         stage ('publish') {
