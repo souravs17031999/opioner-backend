@@ -38,6 +38,42 @@ services:
       - PGDATABASE
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
+  product_service:
+    build:
+      context: product-service-taskly
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE
+      - ALLOWED_ORIGIN_HOST_PROD
+      - TEST_JENKINS_BUILD
+  notification_service:
+    build:
+      context: notification-service-taskly
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE
+      - ALLOWED_ORIGIN_HOST_PROD
+      - TEST_JENKINS_BUILD
   postgres:
     image: postgres
     restart: always
