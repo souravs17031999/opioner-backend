@@ -19,6 +19,7 @@ services:
       - REQUIRE_DB_INSERT
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
+      - REQUIRE_DB_MIGRATIONS
 
   postgres:
     image: postgres

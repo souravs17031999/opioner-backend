@@ -4,8 +4,8 @@ env:
 	@echo "MAKE env ==========================================="
 	build-scripts/make-env.sh
 
-docker:
-	@echo "MAKE docker ==========================================="
+build:
+	@echo "MAKE build ==========================================="
 	build-scripts/docker-flow.sh  
 
 test:

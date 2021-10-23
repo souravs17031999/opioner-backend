@@ -32,10 +32,10 @@ pipeline {
                 sh 'make env'
             }
         }
-        stage ('docker') {
+        stage ('build') {
             steps {
                 echo "------------------------- RUNNING DOCKER BUILD STAGE ON JENKINS ------------------------"
-                sh 'make docker'
+                sh 'make build'
             }
         }
         stage ('test') {
