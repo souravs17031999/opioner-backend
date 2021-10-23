@@ -29,16 +29,15 @@ services:
       - PGHOST
       - PGUSER
       - PGPASSWORD
-      - PGDATABASE
+      - PGDATABASE=postgres
       - REQUIRE_DB_INSERT
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
+      - REQUIRE_DB_MIGRATIONS
 
   postgres:
     image: postgres
     ports:
       - "5434:5432"
     environment:
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-      - POSTGRES_USER
+      - POSTGRES_HOST_AUTH_METHOD=trust

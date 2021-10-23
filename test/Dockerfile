@@ -6,7 +6,7 @@ WORKDIR /apitest
 
 COPY . .
 
-RUN apk --no-cache add curl
+RUN apk add curl
 
 RUN cd apitest && npm install
 
