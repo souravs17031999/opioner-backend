@@ -43,7 +43,7 @@ pipeline {
         }
         stage ('report') {
             steps {
-                junit 'test-results.xml'
+                junit '**/test-results/*.xml'
             }
         }
         stage ('publish') {
