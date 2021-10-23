@@ -47,8 +47,11 @@ Frontend of [taskly app](https://github.com/souravs17031999/taskly-home) is serv
 - SENDGRID_API_KEY_PROD    
   
 ### Notes:      
-- The actual database for app will be mounted automatically at data directory.     
+- The actual database for app will be mounted automatically at `dbdata` directory owned by docker.     
 - You can use Jenkins build locally for testing your changes as it already contains `test` stage which needs to pass all the tests added.     
 - For testing purpose, it will automatically create the test database in Jenkins build and will be removed after the container stops.   
 - Jenkins CI/CD is already configured in Jenkinsfile and Makefile.    
 - We will use dockers to deploy the app in production.   
+- `dbinit` contains test data to be migrated while starting postgres container and can be used for testing.
+- Currently, db migration step has been added in `auth-service`, in future it maybe be segragated.
+- Currently, we have total 5 services: `auth-service`, `user-service`, `product-service`, `notification-service`, `cron-service`.  
