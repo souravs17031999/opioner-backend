@@ -20,7 +20,24 @@ services:
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
       - REQUIRE_DB_MIGRATIONS
-
+  user_service:
+    build:
+      context: user-service-taskly
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE
+      - ALLOWED_ORIGIN_HOST_PROD
+      - TEST_JENKINS_BUILD
   postgres:
     image: postgres
     restart: always

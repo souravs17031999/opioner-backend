@@ -7,8 +7,10 @@ services:
     depends_on:
       - postgres
       - auth_service
+      - user_service
     links:
       - auth_service
+      - user_service
     environment:
       - AUTHSERVICEHOST
       - USERSERVICEHOST
@@ -20,7 +22,7 @@ services:
       context: ../auth-service-taskly
       dockerfile: ../auth-service-taskly/Dockerfile
     ports:
-      - "8082:8081"
+      - "8081:8081"
     depends_on:
       - postgres
     links:
@@ -34,6 +36,24 @@ services:
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
       - REQUIRE_DB_MIGRATIONS=True
+
+  user_service:
+    build:
+      context: ../user-service-taskly
+      dockerfile: ../user-service-taskly/Dockerfile
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE=postgres
+      - ALLOWED_ORIGIN_HOST_PROD
+      - TEST_JENKINS_BUILD
 
   postgres:
     image: postgres
