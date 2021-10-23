@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "*"
+gunicorn = "*"
+bcrypt = "*"
+flask-mysql = "*"
+pyjwt = "*"
+psycopg2-binary = "*"
+psycopg2 = "*"
+sendgrid = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
