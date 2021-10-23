@@ -74,6 +74,24 @@ services:
       - PGDATABASE
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
+  cron_service:
+    build:
+      context: cron-service-taskly
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE
+      - ALLOWED_ORIGIN_HOST_PROD
+      - TEST_JENKINS_BUILD
   postgres:
     image: postgres
     restart: always
