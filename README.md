@@ -23,9 +23,13 @@ Frontend of [taskly app](https://github.com/souravs17031999/taskly-home) is serv
 - Convert the Flask backend into NodeJS backend for realtime processing and low latency.
 
 ## Running application locally:
-
-- Run `docker-compose up --build`
-- Your service should be up and running.
+  
+- Clone this repo    
+  `git clone git@github.com:souravs17031999/taskly-backend-docker-app.git`   
+- Start docker service if not started already on your system (Install docker from [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04) and docker-compose from [here](https://www.digitalocean.com/community/tutorials/how-to-install-docker-compose-on-ubuntu-18-04))         
+- Run all services with docker-compose from cloned project root directory. 
+  `docker-compose up --build`      
+- Your services should be up and running.     
 
 ### ENV VARIABLES FOR RUNNING:
 
