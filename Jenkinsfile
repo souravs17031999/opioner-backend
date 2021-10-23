@@ -41,6 +41,11 @@ pipeline {
                 sh 'make test'
             }
         }
+        stage ('report') {
+            steps {
+                junit 'test-results.xml'
+            }
+        }
         stage ('publish') {
             steps {
                 sh 'make publish'
