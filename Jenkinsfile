@@ -28,25 +28,21 @@ pipeline {
         }
         stage ('env') {
             steps {
-                echo "------------------------- RUNNING ENV BUILD STAGE ON JENKINS ------------------------"
                 sh 'make env'
             }
         }
         stage ('build') {
             steps {
-                echo "------------------------- RUNNING DOCKER BUILD STAGE ON JENKINS ------------------------"
                 sh 'make build'
             }
         }
         stage ('test') {
             steps {
-                echo "------------------------- RUNNING TEST BUILD STAGE ON JENKINS ------------------------"
                 sh 'make test'
             }
         }
         stage ('publish') {
             steps {
-                echo "------------------------- RUNNING PUBLISH BUILD STAGE ON JENKINS ------------------------"
                 sh 'make publish'
             }
         }
