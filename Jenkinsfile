@@ -19,6 +19,7 @@ pipeline {
         NOTIFICATIONSERVICEHOST = credentials('NOTIFICATIONSERVICEHOST')
         dockerHubUsername = credentials('dockerHubUsername')
         dockerHubPassword = credentials('dockerHubPassword')
+        BUILD_NUMBER = $BUILD_NUMBER
     }
 
     stages {
@@ -52,6 +53,7 @@ pipeline {
     post {
         always {
             echo "---------------------- FINAL STEP OF JENKINS RUNS ALWAYS ----------------------"
+            sh "sudo chown root:souravcovenant /run/docker.sock"
         }
     }
 }

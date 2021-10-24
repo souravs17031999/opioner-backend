@@ -1,1 +1,0 @@
-sudo chown root:souravcovenant /run/docker.sock
