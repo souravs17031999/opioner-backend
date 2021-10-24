@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "8081:8081"
+      - "8085:8081"
     depends_on:
       - postgres
     links:
@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "8082:8082"
+      - "8086:8082"
     depends_on:
       - postgres
     links:
@@ -44,7 +44,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "8083:8083"
+      - "8087:8083"
     depends_on:
       - postgres
     links:
@@ -62,7 +62,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "8084:8084"
+      - "8088:8084"
     depends_on:
       - postgres
     links:
@@ -80,7 +80,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "8085:8085"
+      - "8089:8085"
     depends_on:
       - postgres
     links:
@@ -96,7 +96,7 @@ services:
     image: postgres
     restart: always
     ports:
-      - "5433:5432"
+      - "5435:5432"
     environment:
       - POSTGRES_PASSWORD
       - POSTGRES_DB
