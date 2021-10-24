@@ -19,7 +19,7 @@ pipeline {
         NOTIFICATIONSERVICEHOST = credentials('NOTIFICATIONSERVICEHOST')
         dockerHubUsername = credentials('dockerHubUsername')
         dockerHubPassword = credentials('dockerHubPassword')
-        BUILD_NUMBER = $BUILD_NUMBER
+        BUILD_NUMBER = ${BUILD_NUMBER}
     }
 
     stages {
