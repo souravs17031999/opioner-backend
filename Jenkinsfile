@@ -17,6 +17,8 @@ pipeline {
         USERSERVICEHOST = credentials('USERSERVICEHOST')
         PRODUCTSERVICEHOST = credentials('PRODUCTSERVICEHOST')
         NOTIFICATIONSERVICEHOST = credentials('NOTIFICATIONSERVICEHOST')
+        dockerHubUsername = credentials('dockerHubUsername')
+        dockerHubPassword = credentials('dockerHubPassword')
     }
 
     stages {
