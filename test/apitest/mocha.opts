@@ -2,3 +2,5 @@ test.js
 -R spec
 -ui bdd
 --recursive
+-- bail
+--exit 
