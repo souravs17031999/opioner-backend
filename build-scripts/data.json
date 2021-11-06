@@ -1,0 +1,16 @@
+{
+    "username": "TasklyNotificationBot",
+    "icon_emoji": ":satellite:",
+    "attachments": [
+        {
+            "color": "#9733EE",
+            "fields": [
+                {
+                    "title": "Published new docker image to docker hub",
+                    "value": "Current build is successful, Build number: ${BUILD_NUMBER}",
+                    "short": "false"
+                }
+            ]
+        }
+    ]
+}
