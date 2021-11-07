@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS public.task_list (
     status_tag text DEFAULT 'Todo'::text,
     is_email_pushed smallint DEFAULT 0,
     is_phone_pushed smallint DEFAULT 0,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    privacy text DEFAULT 'private'::text
 );
 ALTER TABLE public.task_list OWNER TO postgres;
 --

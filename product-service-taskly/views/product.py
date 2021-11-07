@@ -79,17 +79,18 @@ def fetch_user_list():
         tasks = []
         is_reminder_set = False
         for item in db_data:
-            if item[11] or item[12]:
+            if item[12] or item[13]:
                 is_reminder_set = True
             else:
                 is_reminder_set = False
 
             tasks.append(
                 {
-                    "id": item[7],
-                    "description": item[9],
-                    "status": item[10],
+                    "id": item[8],
+                    "description": item[10],
+                    "status": item[11],
                     "is_reminder_set": is_reminder_set,
+                    "privacy_status": item[15],
                 }
             )
 
