@@ -1,16 +1,28 @@
 {
     "username": "TasklyNotificationBot",
     "icon_emoji": ":satellite:",
-    "attachments": [
+    "text": "test message",
+    "blocks": [
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "DOCKER BUILD ON JENKINS",
+				"emoji": true
+			}
+	    },
         {
-            "color": "#9733EE",
-            "fields": [
-                {
-                    "title": "Published new docker image to docker hub",
-                    "value": "Current build is successful, Build number: ${BUILD_NUMBER}",
-                    "short": "false"
-                }
-            ]
-        }
+			"type": "section",
+			"fields": [
+				{
+					"type": "mrkdwn",
+					"text": "*Type:*\nNotification"
+				},
+				{
+					"type": "mrkdwn",
+					"text": "*Created by:*\nJenkins build"
+				}
+			]
+		}
     ]
 }

@@ -1,4 +1,6 @@
 echo "----- SENDING NOTIFICATION TO SLACK "
 
-curl --header "Content-Type: application/json" --request POST \
-  --data @build-scripts/data.json $SLACK_WEBHOOK_URL
+echo "---------- $JOB_NAME"
+echo "---------- $BRANCH_NAME"
+
+python build-scripts/publish.py
