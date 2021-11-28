@@ -24,6 +24,7 @@ app = Flask(__name__)
 
 notification = Blueprint("notification", __name__)
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
+SENDGRID_API_KEY_PROD = os.getenv("SENDGRID_API_KEY_PROD")
 
 conn = psycopg2.connect(DATABASE_URL)
 
@@ -56,14 +57,14 @@ def send_reminder_mail_notifications(email, name):
     )
 
     try:
-        sendgridAPIClientKey = os.getenv("SENDGRID_API_KEY_PROD")
+        sendgridAPIClientKey = SENDGRID_API_KEY_PROD
         sg = SendGridAPIClient(sendgridAPIClientKey)
         response = sg.send(message)
         print(response.status_code)
     except Exception as e:
         print(e)
         print(e.body)
-        print(e.message)
+        # print(e.message)
         print("failure !")
         return {"status": "failure", "message": "Email reminder sending failed !"}
 
@@ -94,14 +95,14 @@ def stop_reminder_mail_notifications(email, name):
     )
 
     try:
-        sendgridAPIClientKey = os.getenv("SENDGRID_API_KEY_PROD")
+        sendgridAPIClientKey = SENDGRID_API_KEY_PROD
         sg = SendGridAPIClient(sendgridAPIClientKey)
         response = sg.send(message)
         print(response.status_code)
     except Exception as e:
         print(e)
         print(e.body)
-        print(e.message)
+        # print(e.message)
         print("failure !")
         return {"status": "failure", "message": "Email stop reminder sending failed !"}
 
@@ -187,18 +188,26 @@ def subscribe_user_to_notifications():
         == "success"
     ):
         print("SUCCESS: REMINDER MAIL FOR NOTIFICATION USER SENT SUCCESFULLY !")
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "Push reminders set successfully, User subscribed to notifications !",
+                }
+            ),
+            200,
+        )
     else:
         print("FAILURE: REMINDER MAIL FOR NOTIFICATION USER FAILED !")
-
-    return (
-        jsonify(
-            {
-                "status": "success",
-                "message": "Push reminders set successfully, User subscribed to notifications !",
-            }
-        ),
-        200,
-    )
+        return (
+            jsonify(
+                {
+                    "status": "failure",
+                    "message": "Push reminders failed, User not subscribed to notifications !",
+                }
+            ),
+            500,
+        )
 
 
 @notification.route("/unsubscribe-notification", methods=["POST"])
@@ -248,15 +257,26 @@ def unsubscribe_user_to_notifications():
 
     if stop_reminder_mail_notifications(email, firstname)["status"] == "success":
         print("SUCCESS: STOP REMINDER MAIL FOR NOTIFICATION USER SENT SUCCESFULLY !")
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "User unsubscribed to notifications !",
+                }
+            ),
+            200,
+        )
     else:
         print("FAILURE: STOP REMINDER MAIL FOR NOTIFICATION USER FAILED !")
-
-    return (
-        jsonify(
-            {"status": "success", "message": "User unsubscribed to notifications !"}
-        ),
-        200,
-    )
+        return (
+            jsonify(
+                {
+                    "status": "failure",
+                    "message": "User failed to unsubscribe notifications !",
+                }
+            ),
+            500,
+        )
 
 
 @notification.route("/insert-notification", methods=["POST"])

@@ -74,6 +74,7 @@ services:
       - PGDATABASE
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
+      - SENDGRID_API_KEY_PROD
   cron_service:
     build:
       context: cron-service-taskly
@@ -92,6 +93,7 @@ services:
       - PGDATABASE
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
+      - SENDGRID_API_KEY_PROD
   postgres:
     image: postgres
     restart: always

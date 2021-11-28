@@ -21,6 +21,7 @@ pipeline {
         dockerHubPassword = credentials('dockerHubPassword')
         BUILD_NUMBER = "${BUILD_NUMBER}"
         SLACK_WEBHOOK_URL = credentials('SLACK_WEBHOOK_URL')
+        SENDGRID_API_KEY_PROD = credentials('SENDGRID_API_KEY_PROD')
     }
 
     stages {

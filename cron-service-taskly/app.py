@@ -32,7 +32,7 @@ cron_schedular = BlockingScheduler()
 # mysql.init_app(app)
 
 # generate and execute template for sending mails with dynamic vars
-print("Running CRON Schedular for Sending reminder mails")
+print("Initializing CRON Schedular.... ")
 
 
 def generate_mail_content(template_name, **template_vars):
@@ -47,6 +47,7 @@ def generate_mail_content(template_name, **template_vars):
 @cron_schedular.scheduled_job(trigger="cron", hour="14", minute="54", second="00")
 def send_email_notification_to_user():
 
+    print("CRON for sending morning IST reminder mails ....")
     print("CRON TIME (UTC): ", datetime.datetime.utcnow())
     # conn = mysql.connect()
     cursor = conn.cursor()
@@ -102,6 +103,50 @@ def send_email_notification_to_user():
                 print("failure !")
 
             print("success !")
+
+    cursor.close()
+
+
+# set flag status for comments every 5 min if flagged count > 5
+@cron_schedular.scheduled_job(trigger="interval", minutes=5)
+def set_flag_status_for_comments():
+
+    print("CRON for setting flag status for comments ....")
+    affected_count = 0
+    TOTAL_FLAGGED_COMMENT_CONSTRAINT = 5
+    cursor = conn.cursor()
+    fetchAllCommentsquery = "SELECT * FROM feed_tracking_comments"
+    comment_data = None
+    try:
+        cursor.execute(fetchAllCommentsquery)
+        affected_count = cursor.rowcount
+        comment_data = cursor.fetchall()
+        print("----------------------------------------------------")
+        print(cursor.query.decode())
+        print(f"{affected_count} rows affected")
+        print("DB DATA : ", comment_data)
+
+    except Exception as e:
+        print(e)
+
+    updateFlagStatusQuery = (
+        "UPDATE feed_tracking_comments SET is_flagged = 1 WHERE comment_id = %s"
+    )
+    # mark flag status only if not marked already, unflag should be manually done
+    for comment in comment_data:
+        if len(comment[9]) > TOTAL_FLAGGED_COMMENT_CONSTRAINT and not comment[6]:
+            try:
+                cursor.execute(updateFlagStatusQuery, (comment[0],))
+                conn.commit()
+                affected_count = cursor.rowcount
+                print(cursor.query.decode())
+                print(f"{affected_count} rows affected")
+
+            except Exception as e:
+                print(e)
+
+    print("----------------------------------------------------")
+    cursor.close()
 
 
 cron_schedular.start()
