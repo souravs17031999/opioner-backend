@@ -125,6 +125,55 @@ def subscribe_user_to_notifications():
     # conn = mysql.connect()
     cursor = conn.cursor()
     affected_count = 0
+    user_id = post_request["user_id"]
+    list_id = post_request["list_id"]
+
+    selectAuthQuery = "SELECT * FROM task_list WHERE user_id = %s AND list_id = %s"
+    db_user_data = None
+    try:
+        cursor.execute(
+            selectAuthQuery,
+            (
+                user_id,
+                list_id,
+            ),
+        )
+        affected_count = cursor.rowcount
+        print(cursor.query.decode())
+        print(f"{affected_count} rows affected")
+        db_data = cursor.fetchone()
+        print("DB DATA : ", db_data)
+
+    except Exception as e:
+        print(e)
+
+    if affected_count == 0:
+        cursor.close()
+
+        return (
+            jsonify(
+                {
+                    "status": "failure",
+                    "message": "unauthorized request to subscribe notifications for the user !",
+                }
+            ),
+            401,
+        )
+
+    selectUserQuery = "SELECT * FROM users WHERE user_id = %s"
+    try:
+        cursor.execute(
+            selectUserQuery,
+            (user_id,),
+        )
+        affected_count = cursor.rowcount
+        print(cursor.query.decode())
+        print(f"{affected_count} rows affected")
+        db_user_data = cursor.fetchone()
+        print("DB DATA : ", db_user_data)
+
+    except Exception as e:
+        print(e)
 
     updateQueryUserData = "UPDATE users SET phone = %s, email = %s WHERE user_id = %s"
     try:
@@ -147,39 +196,9 @@ def subscribe_user_to_notifications():
     except Exception as e:
         print(e)
     finally:
-        selectQuery = "SELECT * FROM users WHERE user_id = %s"
-        cursor.execute(selectQuery, (post_request["user_id"],))
-
-        affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
-        db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
-
-    firstname = db_data[3]
-
-    updateNotifyForText = "UPDATE task_list SET is_phone_pushed = %s, is_email_pushed = %s WHERE list_id = %s AND user_id = %s"
-    try:
-        affected_count = cursor.execute(
-            updateNotifyForText,
-            (
-                post_request["is_phone"],
-                post_request["is_email"],
-                post_request["task_id"],
-                post_request["user_id"],
-            ),
-        )
-        conn.commit()
-        affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
-        db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
-
-    except Exception as e:
-        print(e)
-    finally:
         cursor.close()
+
+    firstname = db_user_data[3]
 
     print("----------------------------------------------------")
 
@@ -217,21 +236,20 @@ def unsubscribe_user_to_notifications():
     # conn = mysql.connect()
     cursor = conn.cursor()
     affected_count = 0
+    user_id = post_request["user_id"]
+    list_id = post_request["list_id"]
 
-    updateQueryUserData = "UPDATE task_list SET is_phone_pushed = %s, is_email_pushed = %s WHERE list_id = %s AND user_id = %s"
+    selectQuery = "SELECT * FROM task_list WHERE user_id = %s AND list_id = %s"
+    db_user_data = None
     try:
-        affected_count = cursor.execute(
-            updateQueryUserData,
+        cursor.execute(
+            selectQuery,
             (
-                0,
-                0,
-                post_request["task_id"],
-                post_request["user_id"],
+                user_id,
+                list_id,
             ),
         )
-        conn.commit()
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
         print(cursor.query.decode())
         print(f"{affected_count} rows affected")
         db_data = cursor.fetchone()
@@ -239,21 +257,41 @@ def unsubscribe_user_to_notifications():
 
     except Exception as e:
         print(e)
-    finally:
-        selectQuery = "SELECT * FROM users WHERE user_id = %s"
-        cursor.execute(selectQuery, (post_request["user_id"],))
 
-        affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
-        db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
+    if affected_count == 0:
         cursor.close()
+
+        return (
+            jsonify(
+                {
+                    "status": "failure",
+                    "message": "unauthorized request to subscribe notifications for the user !",
+                }
+            ),
+            401,
+        )
 
     print("----------------------------------------------------")
 
-    firstname = db_data[3]
-    email = db_data[5]
+    selectUserQuery = "SELECT * FROM users WHERE user_id = %s"
+    try:
+        cursor.execute(
+            selectUserQuery,
+            (user_id,),
+        )
+        affected_count = cursor.rowcount
+        print(cursor.query.decode())
+        print(f"{affected_count} rows affected")
+        db_user_data = cursor.fetchone()
+        print("DB DATA : ", db_user_data)
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+
+    firstname = db_user_data[3]
+    email = db_user_data[5]
 
     if stop_reminder_mail_notifications(email, firstname)["status"] == "success":
         print("SUCCESS: STOP REMINDER MAIL FOR NOTIFICATION USER SENT SUCCESFULLY !")

@@ -38,6 +38,8 @@ firebaseConfig = {
     "databaseURL": "",
 }
 
+FIREBASE_PROFILE_PIC_PATH = os.getenv("FIREBASE_PROFILE_PIC_PATH")
+
 firebase = pyrebase.initialize_app(firebaseConfig)
 storage = firebase.storage()
 
@@ -137,7 +139,11 @@ def fetch_user_data():
     #     "/home/souravcovenant/Desktop/MENU_grocery_template/avatar.png")
     # print(storage)
     print("****** FETCHING PROFILE PIC FROM FIREBASE *******")
-    APP_UPLOAD_FIREBASE_PATH = f"profile_avatar/{user_id}.png"
+    APP_UPLOAD_FIREBASE_PATH = f"{FIREBASE_PROFILE_PIC_PATH}/{user_id}.png"
+    print(
+        "[debug]: fetching from firebase at APP_UPLOAD_FIREBASE_PATH: ",
+        APP_UPLOAD_FIREBASE_PATH,
+    )
     avatar_fetched_image_path = storage.child(APP_UPLOAD_FIREBASE_PATH).get_url(user_id)
 
     response = {}
@@ -176,7 +182,11 @@ def update_profile_pic_for_user():
 
     profile_avatar_user = request.files["file"]
     user_id = request.form["user_id"]
-    APP_UPLOAD_FIREBASE_PATH = f"profile_avatar/{user_id}.png"
+    APP_UPLOAD_FIREBASE_PATH = f"{FIREBASE_PROFILE_PIC_PATH}/{user_id}.png"
+    print(
+        "[debug]: uploading to firebase at APP_UPLOAD_FIREBASE_PATH: ",
+        APP_UPLOAD_FIREBASE_PATH,
+    )
     storage.child(APP_UPLOAD_FIREBASE_PATH).put(profile_avatar_user)
 
     response = {}

@@ -38,6 +38,7 @@ services:
       - PGDATABASE
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
+      - FIREBASE_PROFILE_PIC_PATH
   product_service:
     build:
       context: product-service-taskly

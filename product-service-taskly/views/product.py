@@ -267,13 +267,14 @@ def submit_or_update_user_task():
     user_email = post_request.get("email")
 
     if post_request.get("reminder_set"):
-        is_email_pushed = is_phone_pushed = 1
+        is_email_pushed = 1
     else:
-        is_email_pushed = is_phone_pushed = 0
+        is_email_pushed = 0
 
     task_status = post_request.get("status")
 
     db_data = None
+    response = {}
 
     if post_request["update_flag"] == 0:
         query = (
@@ -319,17 +320,92 @@ def submit_or_update_user_task():
 
             cursor.close()
 
+        if affected_count == 0:
+            response["status"] = "failure"
+            response["message"] = "Task insertion for user failed !"
+            return jsonify(response), 500
+        else:
+            if db_data is not None:
+                response["id"] = db_data[0]
+                response["status_tag"] = db_data[3]
+            response["status"] = "success"
+            response["message"] = "INSERTION for User tasks SUCCESFULLY DONE !"
+            return jsonify(response), 200
+
     else:
-        query = "UPDATE task_list SET description = %s, privacy = %s, is_email_pushed = %s, is_phone_pushed = %s, status_tag = %s WHERE user_id = %s AND list_id = %s"
+
+        # check notification status and send notification if required, then update other fields
+        check_notification_status_user = (
+            "SELECT is_email_pushed FROM task_list WHERE user_id = %s AND list_id = %s"
+        )
+        user_notification_already_set = 0
+        try:
+            cursor.execute(
+                check_notification_status_user,
+                (
+                    user_id,
+                    list_id,
+                ),
+            )
+            affected_count = cursor.rowcount
+            db_data_notification = cursor.fetchone()
+            print("DB DATA: ", db_data_notification)
+            print(cursor.query.decode())
+            print(f"{affected_count} rows affected")
+            user_notification_already_set = db_data_notification[0]
+            conn.commit()
+        except Exception as e:
+            print(e)
+
+        # user input and db data doesnot match, meaning we are good for sending notifications
+        if user_notification_already_set != is_email_pushed:
+
+            if is_email_pushed and user_email is not None:
+                payload = {
+                    "user_id": user_id,
+                    "email": user_email,
+                    "phone": "123456",
+                    "list_id": list_id,
+                }
+                notifyServiceReply = requests.post(
+                    "http://notification_service:8084/notification/subscribe-notification",
+                    json=payload,
+                )
+                jsonifiedReply = notifyServiceReply.json()
+                if jsonifiedReply["status"] != "success":
+                    response["status"] = "failure"
+                    response[
+                        "message"
+                    ] = "Error while suscribing user to notifications, INSERTION/UPDATION FAILED !"
+                    return jsonify(response), 500
+            else:
+                payload = {
+                    "user_id": user_id,
+                    "email": user_email,
+                    "phone": "123456",
+                    "list_id": list_id,
+                }
+                notifyServiceReply = requests.post(
+                    "http://notification_service:8084/notification/unsubscribe-notification",
+                    json=payload,
+                )
+                jsonifiedReply = notifyServiceReply.json()
+                if jsonifiedReply["status"] != "success":
+                    response["status"] = "failure"
+                    response[
+                        "message"
+                    ] = "Error while suscribing user to notifications, INSERTION/UPDATION FAILED !"
+                    return jsonify(response), 500
+
+        update_query = "UPDATE task_list SET description = %s, privacy = %s, is_email_pushed = %s, status_tag = %s WHERE user_id = %s AND list_id = %s"
 
         try:
             affected_count = cursor.execute(
-                query,
+                update_query,
                 (
                     description,
                     privacy,
                     is_email_pushed,
-                    is_phone_pushed,
                     task_status,
                     user_id,
                     list_id,
@@ -348,35 +424,16 @@ def submit_or_update_user_task():
         finally:
             cursor.close()
 
+        if affected_count == 0:
+            response["status"] = "failure"
+            response["message"] = "Task Updation for user failed !"
+            return jsonify(response), 500
+        else:
+            response["status"] = "success"
+            response["message"] = "Updation for User tasks SUCCESFULLY DONE !"
+            return jsonify(response), 200
+
     print("----------------------------------------------------")
-
-    response = {}
-    if affected_count == 0 and post_request["update_flag"] == 0:
-        response["status"] = "failure"
-        response["message"] = "NO lists found for the requested user !"
-        return jsonify(response), 500
-    else:
-        # send email notification when subscribing to task reminders
-        if is_email_pushed and user_email is not None:
-            payload = {"user_id": user_id, "email": user_email, "phone": "123456"}
-            notifyServiceReply = requests.post(
-                "http://notification_service:8084/notification/subscribe-notification",
-                json=payload,
-            )
-            jsonifiedReply = notifyServiceReply.json()
-            if jsonifiedReply["status"] != "success":
-                response["status"] = "failure"
-                response[
-                    "message"
-                ] = "Error while suscribing user to notifications, INSERTION/UPDATION FAILED !"
-                return jsonify(response), 500
-
-        if db_data is not None:
-            response["id"] = db_data[0]
-            response["status_tag"] = db_data[3]
-        response["status"] = "success"
-        response["message"] = "INSERTION/UPDATION SUCCESFULLY DONE !"
-        return jsonify(response), 200
 
 
 @product.route("/delete-task", methods=["POST"])
