@@ -7,21 +7,6 @@
 Currently, the project is deployed using Heroku servers and all requests are served through Heroku API gateway.
 Frontend of [taskly app](https://github.com/souravs17031999/taskly-home) is served through Github pages but is planned to deploy through AWS in future.
 
-## New to [Hacktoberfest-2021](https://hacktoberfest.digitalocean.com/) ?
-
-- Make your first PR:
-
-* If you are adding a feature, checkout a branch name to Feature/<PR-TITLE>. Ex. "Feature/add-feature"
-* If you are fixing a bug, checkout a branch name to Bugfix/<Bug-title-fix>. Ex. "Bugfix/fix-bug"
-* Commit message should be following [these practices](https://chris.beams.io/posts/git-commit/).
-
-- Your PR's will be reviewed within a week and be released on weekends with changes updated in changelog.MD
-
-## Objective for Hacktoberfest-2021
-
-- Add endpoints as will be discussed below.
-- Convert the Flask backend into NodeJS backend for realtime processing and low latency.
-
 ## Running application locally:
   
 - Clone this repo    
@@ -45,6 +30,7 @@ Frontend of [taskly app](https://github.com/souravs17031999/taskly-home) is serv
 - REQUIRE_DB_MIGRATIONS
 - REQUIRE_DB_INSERT
 - SENDGRID_API_KEY_PROD    
+- FIREBASE_PROFILE_PIC_PATH
   
 ### Notes:      
 - The actual database for app will be mounted automatically at `dbdata` directory owned by docker.     
