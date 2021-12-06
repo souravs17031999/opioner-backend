@@ -24,9 +24,70 @@ app = Flask(__name__)
 
 notification = Blueprint("notification", __name__)
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
+if os.getenv("DATABASE_URL") != "":
+    DATABASE_URL = os.getenv("DATABASE_URL")
+
 SENDGRID_API_KEY_PROD = os.getenv("SENDGRID_API_KEY_PROD")
+SENDGRID_SENDER_EMAIL = "opinic.contact@gmail.com"
 
 conn = psycopg2.connect(DATABASE_URL)
+
+
+def authorize(f):
+    @wraps(f)
+    def decorated_function(*args, **kws):
+
+        cursor = conn.cursor()
+        request_user_id = -1
+        if request.method == "GET":
+            request_user_id = request.args.get("user_id")
+        else:
+            request_user_id = request.get_json(force=True).get("user_id")
+
+        print("Authorization for user_id: ", request_user_id)
+        authorizeUserQuery = "SELECT u.* FROM users u WHERE u.user_id = %s"
+        affected_count = 0
+        user_data = None
+        try:
+            cursor.execute(authorizeUserQuery, (request_user_id,))
+            affected_count = cursor.rowcount
+            user_data = cursor.fetchone()
+            print(cursor.query.decode())
+            print(f"{affected_count} rows affected")
+            print("----------------------------------------------------")
+            print("logged in authorized user data: ", user_data)
+            print("----------------------------------------------------")
+            conn.commit()
+        except Exception as e:
+            print(e)
+            conn.rollback()
+        finally:
+            cursor.close()
+
+        if affected_count == 0:
+            return (
+                jsonify(
+                    {
+                        "status": "failure",
+                        "message": "unauthorized request !",
+                    }
+                ),
+                401,
+            )
+
+        loggedInUser = {
+            "user_id": user_data[0],
+            "username": user_data[1],
+            "firstname": user_data[3],
+            "lastname": user_data[4],
+            "email": user_data[5],
+            "phone": user_data[6],
+            "created_at": user_data[7],
+        }
+
+        return f(loggedInUser, *args, **kws)
+
+    return decorated_function
 
 
 def generate_mail_content(template_name, **template_vars):
@@ -37,18 +98,17 @@ def generate_mail_content(template_name, **template_vars):
     return template.render(**template_vars)
 
 
-def send_reminder_mail_notifications(email, name):
+def send_sendgrid_mail(emailData, template_name):
 
-    sender_email = "taskly.contact@gmail.com"
-    subject = "Reminder for your task created successfully on Taskly - let's do it !"
-    receiver_email = email
-    firstname = name
+    sender_email = SENDGRID_SENDER_EMAIL
+    subject = emailData["subject"]
+    receiver_email = emailData["user_email"]
 
     print("SENDER EMAIL : ", sender_email)
     print("RECEIVER EMAIL : ", receiver_email)
     print("Subject: ", subject)
 
-    mail_body = generate_mail_content("first_reminder_mail.html", firstname=firstname)
+    mail_body = generate_mail_content(template_name, emailData=emailData)
     message = Mail(
         from_email=sender_email,
         to_emails=receiver_email,
@@ -63,8 +123,6 @@ def send_reminder_mail_notifications(email, name):
         print(response.status_code)
     except Exception as e:
         print(e)
-        print(e.body)
-        # print(e.message)
         print("failure !")
         return {"status": "failure", "message": "Email reminder sending failed !"}
 
@@ -75,246 +133,9 @@ def send_reminder_mail_notifications(email, name):
     }
 
 
-def stop_reminder_mail_notifications(email, name):
-
-    sender_email = "taskly.contact@gmail.com"
-    subject = "Reminder stopped successfully on Taskly"
-    receiver_email = email
-    firstname = name
-
-    print("SENDER EMAIL : ", sender_email)
-    print("RECEIVER EMAIL : ", receiver_email)
-    print("Subject: ", subject)
-
-    mail_body = generate_mail_content("unsubscribe_mail.html", firstname=firstname)
-    message = Mail(
-        from_email=sender_email,
-        to_emails=receiver_email,
-        subject=subject,
-        html_content=mail_body,
-    )
-
-    try:
-        sendgridAPIClientKey = SENDGRID_API_KEY_PROD
-        sg = SendGridAPIClient(sendgridAPIClientKey)
-        response = sg.send(message)
-        print(response.status_code)
-    except Exception as e:
-        print(e)
-        print(e.body)
-        # print(e.message)
-        print("failure !")
-        return {"status": "failure", "message": "Email stop reminder sending failed !"}
-
-    print("success !")
-    return {
-        "status": "success",
-        "message": "Email stop reminder to user send successfully !",
-    }
-
-
 @notification.route("/test", methods=["GET", "POST"])
 def test_notification_service():
     return "<h1> This is notification service testing, service is up and running !</h1>"
-
-
-@notification.route("/subscribe-notification", methods=["POST"])
-def subscribe_user_to_notifications():
-
-    post_request = request.get_json(force=True)
-    # conn = mysql.connect()
-    cursor = conn.cursor()
-    affected_count = 0
-    user_id = post_request["user_id"]
-    list_id = post_request["list_id"]
-
-    selectAuthQuery = "SELECT * FROM task_list WHERE user_id = %s AND list_id = %s"
-    db_user_data = None
-    try:
-        cursor.execute(
-            selectAuthQuery,
-            (
-                user_id,
-                list_id,
-            ),
-        )
-        affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
-        db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
-
-    except Exception as e:
-        print(e)
-
-    if affected_count == 0:
-        cursor.close()
-
-        return (
-            jsonify(
-                {
-                    "status": "failure",
-                    "message": "unauthorized request to subscribe notifications for the user !",
-                }
-            ),
-            401,
-        )
-
-    selectUserQuery = "SELECT * FROM users WHERE user_id = %s"
-    try:
-        cursor.execute(
-            selectUserQuery,
-            (user_id,),
-        )
-        affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
-        db_user_data = cursor.fetchone()
-        print("DB DATA : ", db_user_data)
-
-    except Exception as e:
-        print(e)
-
-    updateQueryUserData = "UPDATE users SET phone = %s, email = %s WHERE user_id = %s"
-    try:
-        cursor.execute(
-            updateQueryUserData,
-            (
-                post_request["phone"],
-                post_request["email"],
-                post_request["user_id"],
-            ),
-        )
-        conn.commit()
-        affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
-        db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
-
-    except Exception as e:
-        print(e)
-    finally:
-        cursor.close()
-
-    firstname = db_user_data[3]
-
-    print("----------------------------------------------------")
-
-    if (
-        send_reminder_mail_notifications(post_request["email"], firstname)["status"]
-        == "success"
-    ):
-        print("SUCCESS: REMINDER MAIL FOR NOTIFICATION USER SENT SUCCESFULLY !")
-        return (
-            jsonify(
-                {
-                    "status": "success",
-                    "message": "Push reminders set successfully, User subscribed to notifications !",
-                }
-            ),
-            200,
-        )
-    else:
-        print("FAILURE: REMINDER MAIL FOR NOTIFICATION USER FAILED !")
-        return (
-            jsonify(
-                {
-                    "status": "failure",
-                    "message": "Push reminders failed, User not subscribed to notifications !",
-                }
-            ),
-            500,
-        )
-
-
-@notification.route("/unsubscribe-notification", methods=["POST"])
-def unsubscribe_user_to_notifications():
-
-    post_request = request.get_json(force=True)
-    # conn = mysql.connect()
-    cursor = conn.cursor()
-    affected_count = 0
-    user_id = post_request["user_id"]
-    list_id = post_request["list_id"]
-
-    selectQuery = "SELECT * FROM task_list WHERE user_id = %s AND list_id = %s"
-    db_user_data = None
-    try:
-        cursor.execute(
-            selectQuery,
-            (
-                user_id,
-                list_id,
-            ),
-        )
-        affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
-        db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
-
-    except Exception as e:
-        print(e)
-
-    if affected_count == 0:
-        cursor.close()
-
-        return (
-            jsonify(
-                {
-                    "status": "failure",
-                    "message": "unauthorized request to subscribe notifications for the user !",
-                }
-            ),
-            401,
-        )
-
-    print("----------------------------------------------------")
-
-    selectUserQuery = "SELECT * FROM users WHERE user_id = %s"
-    try:
-        cursor.execute(
-            selectUserQuery,
-            (user_id,),
-        )
-        affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
-        db_user_data = cursor.fetchone()
-        print("DB DATA : ", db_user_data)
-
-    except Exception as e:
-        print(e)
-    finally:
-        cursor.close()
-
-    firstname = db_user_data[3]
-    email = db_user_data[5]
-
-    if stop_reminder_mail_notifications(email, firstname)["status"] == "success":
-        print("SUCCESS: STOP REMINDER MAIL FOR NOTIFICATION USER SENT SUCCESFULLY !")
-        return (
-            jsonify(
-                {
-                    "status": "success",
-                    "message": "User unsubscribed to notifications !",
-                }
-            ),
-            200,
-        )
-    else:
-        print("FAILURE: STOP REMINDER MAIL FOR NOTIFICATION USER FAILED !")
-        return (
-            jsonify(
-                {
-                    "status": "failure",
-                    "message": "User failed to unsubscribe notifications !",
-                }
-            ),
-            500,
-        )
 
 
 @notification.route("/insert-notification", methods=["POST"])

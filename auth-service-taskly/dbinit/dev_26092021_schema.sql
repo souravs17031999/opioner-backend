@@ -50,15 +50,15 @@ CREATE TABLE IF NOT EXISTS public.task_list (
     list_id integer NOT NULL,
     user_id integer NOT NULL,
     description text NOT NULL,
-    status_tag text DEFAULT 'Todo'::text,
-    is_email_pushed smallint DEFAULT 0,
-    is_phone_pushed smallint DEFAULT 0,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     privacy text DEFAULT 'private'::text,
     likes integer DEFAULT 0,
     comments integer DEFAULT 0,
     has_liked smallint DEFAULT 0,
-    has_commented smallint DEFAULT 0
+    has_commented smallint DEFAULT 0,
+    is_flagged smallint DEFAULT 0,
+    flagged_by integer [] DEFAULT ARRAY []::integer [],
+    flags_on_feed integer DEFAULT 0
 );
 ALTER TABLE public.task_list OWNER TO postgres;
 --
@@ -66,6 +66,11 @@ ALTER TABLE public.task_list OWNER TO postgres;
 --
 CREATE SEQUENCE IF NOT EXISTS public.task_list_list_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 ALTER TABLE public.task_list_list_id_seq OWNER TO postgres;
+--
+-- Name: task_list_list_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+CREATE SEQUENCE IF NOT EXISTS public.feed_tracking_user_status_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+--
 --
 -- Name: feed_tracking_user_status; Type: TABLE; Schema: public; Owner: postgres
 --
@@ -80,10 +85,6 @@ CREATE TABLE IF NOT EXISTS public.feed_tracking_user_status (
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 ALTER TABLE public.feed_tracking_user_status OWNER TO postgres;
---
--- Name: task_list_list_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-CREATE SEQUENCE IF NOT EXISTS public.feed_tracking_user_status_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 --
 ALTER TABLE public.feed_tracking_user_status_id_seq OWNER TO postgres;
 --
@@ -116,7 +117,9 @@ CREATE TABLE IF NOT EXISTS public.users (
     lastname text,
     email text,
     phone text,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    subscriber_count integer DEFAULT 0,
+    subscribed_by integer [] DEFAULT ARRAY []::integer []
 );
 ALTER TABLE public.users OWNER TO postgres;
 --

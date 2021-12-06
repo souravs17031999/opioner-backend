@@ -23,7 +23,8 @@ app = Flask(__name__)
 
 product = Blueprint("product", __name__)
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
-
+if os.getenv("DATABASE_URL") != "":
+    DATABASE_URL = os.getenv("DATABASE_URL")
 conn = psycopg2.connect(DATABASE_URL)
 
 
@@ -32,31 +33,79 @@ def test_auth_service():
     return "<h1> This is product service testing, service is up and running !</h1>"
 
 
+def authorize(f):
+    @wraps(f)
+    def decorated_function(*args, **kws):
+
+        cursor = conn.cursor()
+
+        request_user_id = -1
+        if request.method == "GET":
+            request_user_id = request.args.get("user_id")
+        else:
+            request_user_id = request.get_json(force=True).get("user_id")
+
+        print("Authorization for user_id: ", request_user_id)
+        authorizeUserQuery = "SELECT u.* FROM users u WHERE u.user_id = %s"
+        affected_count = 0
+        user_data = None
+        try:
+            cursor.execute(authorizeUserQuery, (request_user_id,))
+            affected_count = cursor.rowcount
+            user_data = cursor.fetchone()
+            print(cursor.query.decode())
+            print(f"{affected_count} rows affected")
+            print("----------------------------------------------------")
+            print("logged in authorized user data: ", user_data)
+            print("----------------------------------------------------")
+            conn.commit()
+        except Exception as e:
+            print(e)
+            conn.rollback()
+        finally:
+            cursor.close()
+
+        if affected_count == 0:
+            return (
+                jsonify(
+                    {
+                        "status": "failure",
+                        "message": "unauthorized request !",
+                    }
+                ),
+                401,
+            )
+
+        loggedInUser = {
+            "user_id": user_data[0],
+            "username": user_data[1],
+            "firstname": user_data[3],
+            "lastname": user_data[4],
+            "email": user_data[5],
+            "phone": user_data[6],
+            "created_at": user_data[7],
+        }
+
+        return f(loggedInUser, *args, **kws)
+
+    return decorated_function
+
+
 @product.route("/fetch-list", methods=["GET"])
-def fetch_user_list():
-    user_id = request.args.get("user_id")
+@authorize
+def fetch_user_list(loggedInUser):
 
     # conn = mysql.connect()
     cursor = conn.cursor()
 
-    if user_id == "null" or user_id is None:
-        return (
-            jsonify(
-                {
-                    "status": "failure",
-                    "message": "unauthorized request to fetch lists for the user !",
-                }
-            ),
-            401,
-        )
-
-    query = "SELECT u.*, t.* FROM users u INNER JOIN task_list t ON t.user_id = u.user_id WHERE u.user_id = %s ORDER BY t.list_id"
+    fetchQuery = "SELECT t.* FROM task_list t WHERE t.user_id = %s"
 
     affected_count = 0
+    db_list_data = None
     try:
-        cursor.execute(query, (user_id,))
+        cursor.execute(fetchQuery, (loggedInUser["user_id"],))
         affected_count = cursor.rowcount
-        db_data = cursor.fetchall()
+        db_list_data = cursor.fetchall()
         print("----------------------------------------------------")
         print(cursor.query.decode())
         print(f"{affected_count} rows affected")
@@ -66,7 +115,7 @@ def fetch_user_list():
     finally:
         cursor.close()
 
-    print("DB DATA : ", db_data)
+    print("DB DATA : ", db_list_data)
     print("----------------------------------------------------")
 
     response = {}
@@ -78,28 +127,20 @@ def fetch_user_list():
 
     else:
         tasks = []
-        is_reminder_set = False
-        for item in db_data:
-            if item[12] or item[13]:
-                is_reminder_set = True
-            else:
-                is_reminder_set = False
-
+        for item in db_list_data:
             tasks.append(
                 {
-                    "id": item[8],
-                    "description": item[10],
-                    "status": item[11],
-                    "is_reminder_set": is_reminder_set,
-                    "privacy_status": item[15],
+                    "id": item[0],
+                    "description": item[2],
+                    "privacy_status": item[4],
                 }
             )
 
         user_data = {
-            "user_id": db_data[0][0],
-            "firstname": db_data[0][3],
-            "phone": db_data[0][6],
-            "email": db_data[0][5],
+            "user_id": loggedInUser["user_id"],
+            "firstname": loggedInUser["firstname"],
+            "phone": loggedInUser["phone"],
+            "email": loggedInUser["email"],
         }
         response["user_data"] = user_data
         response["status"] = "success"
@@ -109,20 +150,10 @@ def fetch_user_list():
 
 
 @product.route("/fetch-feeds", methods=["GET"])
-def fetch_feed_for_user():
+@authorize
+def fetch_feed_for_user(loggedInUser):
 
-    user_id = request.args.get("user_id")
-
-    if user_id == "null" or user_id is None:
-        return (
-            jsonify(
-                {
-                    "status": "failure",
-                    "message": "unauthorized request to fetch feeds for the user !",
-                }
-            ),
-            401,
-        )
+    user_id = loggedInUser["user_id"]
 
     page = request.args.get("page")
     size = request.args.get("size")
@@ -131,7 +162,7 @@ def fetch_feed_for_user():
     if size is None:
         size = 10
     skip = (int(page) - 1) * int(size)
-    select_query = "SELECT u.username, u.firstname, t.list_id, t.description, t.created_at, t.likes, t.comments FROM task_list t INNER JOIN users u ON t.user_id = u.user_id WHERE t.privacy = %s ORDER BY t.created_at DESC OFFSET %s LIMIT %s"
+    select_query = "SELECT u.username, u.firstname, t.list_id, t.description, t.created_at, t.likes, t.comments, t.flagged_by, u.subscribed_by FROM task_list t INNER JOIN users u ON t.user_id = u.user_id WHERE t.privacy = %s AND t.is_flagged = %s ORDER BY t.created_at DESC OFFSET %s LIMIT %s"
     cursor = conn.cursor()
     affected_count = 0
 
@@ -140,6 +171,7 @@ def fetch_feed_for_user():
             select_query,
             (
                 "public",
+                0,
                 skip,
                 size,
             ),
@@ -231,6 +263,18 @@ def fetch_feed_for_user():
                 if id[0] == item[2]:
                     has_commented = True
 
+            hasUserFlaggedThePost = False
+            flaggedByUsersList = item[7]
+            for id in flaggedByUsersList:
+                if id == user_id:
+                    hasUserFlaggedThePost = True
+
+            hasUserSubscribedThisCreator = False
+            subscribedByUsersList = item[8]
+            for id in subscribedByUsersList:
+                if id == user_id:
+                    hasUserSubscribedThisCreator = True
+
             lists.append(
                 {
                     "id": iter,
@@ -243,6 +287,8 @@ def fetch_feed_for_user():
                     "comments": item[6],
                     "has_liked": has_liked,
                     "has_commented": has_commented,
+                    "is_flagged": hasUserFlaggedThePost,
+                    "has_subscribed": hasUserSubscribedThisCreator,
                 }
             )
 
@@ -264,14 +310,6 @@ def submit_or_update_user_task():
     description = post_request["item"]
     list_id = post_request.get("id")
     privacy = post_request.get("privacy_status")
-    user_email = post_request.get("email")
-
-    if post_request.get("reminder_set"):
-        is_email_pushed = 1
-    else:
-        is_email_pushed = 0
-
-    task_status = post_request.get("status")
 
     db_data = None
     response = {}
@@ -327,77 +365,13 @@ def submit_or_update_user_task():
         else:
             if db_data is not None:
                 response["id"] = db_data[0]
-                response["status_tag"] = db_data[3]
             response["status"] = "success"
             response["message"] = "INSERTION for User tasks SUCCESFULLY DONE !"
             return jsonify(response), 200
 
     else:
 
-        # check notification status and send notification if required, then update other fields
-        check_notification_status_user = (
-            "SELECT is_email_pushed FROM task_list WHERE user_id = %s AND list_id = %s"
-        )
-        user_notification_already_set = 0
-        try:
-            cursor.execute(
-                check_notification_status_user,
-                (
-                    user_id,
-                    list_id,
-                ),
-            )
-            affected_count = cursor.rowcount
-            db_data_notification = cursor.fetchone()
-            print("DB DATA: ", db_data_notification)
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
-            user_notification_already_set = db_data_notification[0]
-            conn.commit()
-        except Exception as e:
-            print(e)
-
-        # user input and db data doesnot match, meaning we are good for sending notifications
-        if user_notification_already_set != is_email_pushed:
-
-            if is_email_pushed and user_email is not None:
-                payload = {
-                    "user_id": user_id,
-                    "email": user_email,
-                    "phone": "123456",
-                    "list_id": list_id,
-                }
-                notifyServiceReply = requests.post(
-                    "http://notification_service:8084/notification/subscribe-notification",
-                    json=payload,
-                )
-                jsonifiedReply = notifyServiceReply.json()
-                if jsonifiedReply["status"] != "success":
-                    response["status"] = "failure"
-                    response[
-                        "message"
-                    ] = "Error while suscribing user to notifications, INSERTION/UPDATION FAILED !"
-                    return jsonify(response), 500
-            else:
-                payload = {
-                    "user_id": user_id,
-                    "email": user_email,
-                    "phone": "123456",
-                    "list_id": list_id,
-                }
-                notifyServiceReply = requests.post(
-                    "http://notification_service:8084/notification/unsubscribe-notification",
-                    json=payload,
-                )
-                jsonifiedReply = notifyServiceReply.json()
-                if jsonifiedReply["status"] != "success":
-                    response["status"] = "failure"
-                    response[
-                        "message"
-                    ] = "Error while suscribing user to notifications, INSERTION/UPDATION FAILED !"
-                    return jsonify(response), 500
-
-        update_query = "UPDATE task_list SET description = %s, privacy = %s, is_email_pushed = %s, status_tag = %s WHERE user_id = %s AND list_id = %s"
+        update_query = "UPDATE task_list SET description = %s, privacy = %s WHERE user_id = %s AND list_id = %s"
 
         try:
             affected_count = cursor.execute(
@@ -405,8 +379,6 @@ def submit_or_update_user_task():
                 (
                     description,
                     privacy,
-                    is_email_pushed,
-                    task_status,
                     user_id,
                     list_id,
                 ),
@@ -711,7 +683,7 @@ def update_user_task_status():
 def insert_or_update_comments():
 
     post_request = request.get_json(force=True)
-    user_id = post_request["user_id"]
+    user_id = int(post_request["user_id"])
     list_id = post_request["list_id"]
     comment = post_request.get("comment_text")
     is_flagged = post_request.get("is_flagged")
@@ -719,6 +691,8 @@ def insert_or_update_comments():
     cursor = conn.cursor()
     affected_count = 0
     created_comment_id = None
+    response = {}
+
     if post_request["update_flag"] == 0:
         # insert comment for the user
         insertUserCommentsQuery = "INSERT INTO feed_tracking_comments(user_id, list_id, comment_description) VALUES(%s, %s, %s)"
@@ -807,27 +781,72 @@ def insert_or_update_comments():
 
         if is_flagged is not None:
             # flag comment query
-            updateUserCommentsQuery = "UPDATE feed_tracking_comments SET flag_on_comments = flag_on_comments + 1, flagged_by = array_append(flagged_by, %s) WHERE comment_id = %s"
+            flaggedByUsersList = []
+            commentFlaggedByGetListFetchQuery = "SELECT ftc.flagged_by FROM feed_tracking_comments ftc WHERE comment_id = %s"
             try:
                 cursor.execute(
-                    updateUserCommentsQuery,
-                    (
-                        user_id,
-                        comment_id,
-                    ),
+                    commentFlaggedByGetListFetchQuery,
+                    (comment_id,),
                 )
-                conn.commit()
                 affected_count = cursor.rowcount
+                comment_data = cursor.fetchone()
+                print("COMMENT_DATA: ", comment_data)
+                flaggedByUsersList = comment_data[0]
                 print(cursor.query.decode())
                 print(f"{affected_count} rows affected")
 
             except Exception as e:
                 print(e)
 
-            finally:
-                cursor.close()
+            # check if requested user already flagged this comment
+            isCommentAlreadyFlaggedByUser = False
+            for id in flaggedByUsersList:
+                if id == user_id:
+                    isCommentAlreadyFlaggedByUser = True
 
-    response = {}
+            if isCommentAlreadyFlaggedByUser:
+                response["flagged_status"] = "FALSE"
+                updateUserCommentsQuery = "UPDATE feed_tracking_comments SET flag_on_comments = flag_on_comments - 1, flagged_by = array_remove(flagged_by, %s) WHERE comment_id = %s"
+                try:
+                    cursor.execute(
+                        updateUserCommentsQuery,
+                        (
+                            user_id,
+                            comment_id,
+                        ),
+                    )
+                    conn.commit()
+                    affected_count = cursor.rowcount
+                    print(cursor.query.decode())
+                    print(f"{affected_count} rows affected")
+
+                except Exception as e:
+                    print(e)
+
+                finally:
+                    cursor.close()
+            else:
+                response["flagged_status"] = "TRUE"
+                updateUserCommentsQuery = "UPDATE feed_tracking_comments SET flag_on_comments = flag_on_comments + 1, flagged_by = array_append(flagged_by, %s) WHERE comment_id = %s"
+                try:
+                    cursor.execute(
+                        updateUserCommentsQuery,
+                        (
+                            user_id,
+                            comment_id,
+                        ),
+                    )
+                    conn.commit()
+                    affected_count = cursor.rowcount
+                    print(cursor.query.decode())
+                    print(f"{affected_count} rows affected")
+
+                except Exception as e:
+                    print(e)
+
+                finally:
+                    cursor.close()
+
     if affected_count == 0:
         response["status"] = "failure"
         response["message"] = "User comments insertion/updation failed !"
@@ -836,6 +855,16 @@ def insert_or_update_comments():
         response["status"] = "success"
         response["message"] = "User comments inserted/updated successfully !"
         response["comment"] = {"comment_id": created_comment_id}
+
+        if post_request["update_flag"] == 1 and is_flagged is not None:
+            if response["flagged_status"] == "TRUE":
+                response[
+                    "message"
+                ] = "comment flagged by user ! We will soon take an action based on our internal investigation."
+            else:
+                response[
+                    "message"
+                ] = "comment unflagged by user ! Thanks for helping the community to grow."
         return jsonify(response), 200
 
 
@@ -904,7 +933,7 @@ def delete_comments_for_user():
 @product.route("/fetch-all-comments", methods=["GET"])
 def fetch_comments_for_user():
 
-    user_id = request.args.get("user_id")
+    user_id = int(request.args.get("user_id"))
     list_id = request.args.get("list_id")
     cursor = conn.cursor()
     affected_count = 0
@@ -917,7 +946,7 @@ def fetch_comments_for_user():
         size = 2
     skip = (int(page) - 1) * int(size)
 
-    fetchAllUserCommentsQuery = "SELECT ftc.comment_id, ftc.comment_description, ftc.created_at, u.username FROM feed_tracking_comments ftc INNER JOIN users u ON ftc.user_id = u.user_id WHERE ftc.list_id = %s AND is_flagged = 0 ORDER BY ftc.created_at DESC OFFSET %s LIMIT %s"
+    fetchAllUserCommentsQuery = "SELECT ftc.comment_id, ftc.comment_description, ftc.created_at, ftc.flagged_by, u.username FROM feed_tracking_comments ftc INNER JOIN users u ON ftc.user_id = u.user_id WHERE ftc.list_id = %s AND is_flagged = 0 ORDER BY ftc.created_at DESC OFFSET %s LIMIT %s"
     db_data = None
     try:
         cursor.execute(
@@ -943,12 +972,20 @@ def fetch_comments_for_user():
 
     commentsData = []
     for comment in db_data:
+
+        hasUserFlaggedComment = False
+        flaggedByUsersList = comment[3]
+        for id in flaggedByUsersList:
+            if id == user_id:
+                hasUserFlaggedComment = True
+
         commentsData.append(
             {
                 "comment_id": comment[0],
                 "comment_text": comment[1],
                 "created_at": comment[2],
-                "username": comment[3],
+                "username": comment[4],
+                "is_flagged": hasUserFlaggedComment,
             }
         )
 
@@ -961,4 +998,100 @@ def fetch_comments_for_user():
         response["status"] = "success"
         response["message"] = "All user comments fetched successfully !"
         response["comments"] = commentsData
+        return jsonify(response), 200
+
+
+@product.route("/feed/flag", methods=["POST"])
+def flag_or_report_feed_by_user():
+
+    post_request = request.get_json(force=True)
+    user_id = post_request["user_id"]
+    list_id = post_request["list_id"]
+    response = {}
+    cursor = conn.cursor()
+    affected_count = 0
+
+    flaggedByUsersList = []
+    feedFlaggedByUserListGetQuery = (
+        "SELECT t.flagged_by FROM task_list t WHERE list_id = %s"
+    )
+
+    try:
+        cursor.execute(
+            feedFlaggedByUserListGetQuery,
+            (list_id,),
+        )
+        affected_count = cursor.rowcount
+        feed_data = cursor.fetchone()
+        print(cursor.query.decode())
+        print("Feed Data: ", feed_data)
+        flaggedByUsersList = feed_data[0]
+        print(f"{affected_count} rows affected")
+
+    except Exception as e:
+        print(e)
+
+    # check if requested user already flagged this feed post
+    isFeedAlreadyFlaggedByUser = False
+    for id in flaggedByUsersList:
+        if id == user_id:
+            isFeedAlreadyFlaggedByUser = True
+
+    if isFeedAlreadyFlaggedByUser:
+        response["flagged_status"] = "FALSE"
+        updateUserFeedFlagStatusQuery = "UPDATE task_list SET flags_on_feed = flags_on_feed - 1, flagged_by = array_remove(flagged_by, %s) WHERE list_id = %s"
+        try:
+            cursor.execute(
+                updateUserFeedFlagStatusQuery,
+                (
+                    user_id,
+                    list_id,
+                ),
+            )
+            conn.commit()
+            affected_count = cursor.rowcount
+            print(cursor.query.decode())
+            print(f"{affected_count} rows affected")
+
+        except Exception as e:
+            print(e)
+
+        finally:
+            cursor.close()
+    else:
+        response["flagged_status"] = "TRUE"
+        updateUserFeedFlagStatusQuery = "UPDATE task_list SET flags_on_feed = flags_on_feed + 1, flagged_by = array_append(flagged_by, %s) WHERE list_id = %s"
+        try:
+            cursor.execute(
+                updateUserFeedFlagStatusQuery,
+                (
+                    user_id,
+                    list_id,
+                ),
+            )
+            conn.commit()
+            affected_count = cursor.rowcount
+            print(cursor.query.decode())
+            print(f"{affected_count} rows affected")
+
+        except Exception as e:
+            print(e)
+
+        finally:
+            cursor.close()
+
+    if affected_count == 0:
+        response["status"] = "failure"
+        response["message"] = "Reporting of feed by user failed !"
+        return jsonify(response), 500
+    else:
+        response["status"] = "success"
+        if response["flagged_status"] == "TRUE":
+            response[
+                "message"
+            ] = "post flagged by user ! We will soon take an action based on our internal investigation."
+        elif response["flagged_status"] == "FALSE":
+            response[
+                "message"
+            ] = "post unflagged by user ! Thanks for helping the community to grow."
         return jsonify(response), 200

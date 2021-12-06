@@ -15,7 +15,8 @@ import pytz
 
 app = Flask(__name__)
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
-
+if os.getenv("DATABASE_URL") != "":
+    DATABASE_URL = os.getenv("DATABASE_URL")
 conn = psycopg2.connect(DATABASE_URL)
 
 # Instantiating the scheduler for the cronjob

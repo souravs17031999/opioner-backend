@@ -1,6 +1,6 @@
 echo "------------------------- WAITING FOR SERVER FOR POSTGRES DB STARTED -------------------------"
 
-while ! pg_isready -h postgres
+while ! pg_isready -h $PGHOST
 do
     echo "waiting for database to start...."
     sleep 1

@@ -8,4 +8,4 @@ source env.sh
 
 source wait-for-db-server.sh 
 
-python3 -m flask run --host=0.0.0.0 --port=8082
+python3 -m flask run --host=0.0.0.0 --port=$PORT

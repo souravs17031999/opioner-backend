@@ -16,4 +16,12 @@ RUN \
 
 COPY . .
 
+ENV PGHOST=postgres
+ENV PGUSER=postgres
+ENV PGPASSWORD=postgres
+ENV PGDATABASE=postgres 
+ENV ALLOWED_ORIGIN_HOST_PROD=*
+ENV DATABASE_URL=postgres
+ENV FIREBASE_PROFILE_PIC_PATH=firebase
+
 ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]

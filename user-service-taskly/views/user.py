@@ -24,7 +24,8 @@ app = Flask(__name__)
 user = Blueprint("user", __name__)
 
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
-
+if os.getenv("DATABASE_URL") != "":
+    DATABASE_URL = os.getenv("DATABASE_URL")
 conn = psycopg2.connect(DATABASE_URL)
 
 firebaseConfig = {
@@ -65,6 +66,66 @@ def token_required(f):
         return f(*args, **kwargs)
 
     return wrapper
+
+
+def authorize(f):
+    @wraps(f)
+    def decorated_function(*args, **kws):
+
+        cursor = conn.cursor()
+
+        request_user_id = -1
+        if request.method == "GET":
+            request_user_id = request.args.get("user_id")
+        else:
+            request_user_id = request.get_json(force=True).get("user_id")
+
+        print("Authorization for user_id: ", request_user_id)
+        authorizeUserQuery = "SELECT u.* FROM users u WHERE u.user_id = %s"
+        affected_count = 0
+        user_data = None
+        try:
+            cursor.execute(authorizeUserQuery, (request_user_id,))
+            affected_count = cursor.rowcount
+            user_data = cursor.fetchone()
+            print(cursor.query.decode())
+            print(f"{affected_count} rows affected")
+            print("----------------------------------------------------")
+            print("logged in authorized user data: ", user_data)
+            print("----------------------------------------------------")
+            conn.commit()
+        except Exception as e:
+            print(e)
+            conn.rollback()
+        finally:
+            cursor.close()
+
+        if affected_count == 0:
+            return (
+                jsonify(
+                    {
+                        "status": "failure",
+                        "message": "unauthorized request !",
+                    }
+                ),
+                401,
+            )
+
+        loggedInUser = {
+            "user_id": user_data[0],
+            "username": user_data[1],
+            "firstname": user_data[3],
+            "lastname": user_data[4],
+            "email": user_data[5],
+            "phone": user_data[6],
+            "created_at": user_data[7],
+            "subscriber_count": user_data[8],
+            "subscribed_by": user_data[9],
+        }
+
+        return f(loggedInUser, *args, **kws)
+
+    return decorated_function
 
 
 @user.route("/test", methods=["GET", "POST"])
@@ -229,4 +290,141 @@ def fetch_user_status_auth():
     else:
         response["status"] = "success"
         response["message"] = "User is active and found in our records !"
+        return jsonify(response), 200
+
+
+@user.route("/subscription", methods=["POST"])
+@authorize
+def subscribe_user(loggedInuser):
+
+    # conn = mysql.connect()
+    cursor = conn.cursor()
+    affected_count = 0
+
+    post_request = request.get_json(force=True)
+    list_id = post_request["list_id"]
+    email_id = post_request.get("email_id")
+
+    subscribedByUserFetchQuery = (
+        "SELECT t.user_id FROM task_list t WHERE t.list_id = %s"
+    )
+    db_user_data = None
+    try:
+        cursor.execute(subscribedByUserFetchQuery, (list_id,))
+        affected_count = cursor.rowcount
+        print("----------------------------------------------------")
+        print(cursor.query.decode())
+        print(f"{affected_count} rows affected")
+        db_user_data = cursor.fetchone()
+        print("DB DATA : ", db_user_data)
+    except Exception as e:
+        print(e)
+
+    response = {}
+    if affected_count == 0:
+        response["status"] = "failure"
+        response["message"] = "Unauthorized request for user subscription !"
+        return jsonify(response), 401
+
+    subscribedForUserId = db_user_data[0]
+    subscribedByUserId = loggedInuser["user_id"]
+
+    selectUserSubscriberListFetchQuery = (
+        "SELECT u.subscribed_by FROM users u WHERE u.user_id = %s"
+    )
+    subscribedByUsersList = []
+    try:
+        cursor.execute(selectUserSubscriberListFetchQuery, (subscribedForUserId,))
+        affected_count = cursor.rowcount
+        print("----------------------------------------------------")
+        print(cursor.query.decode())
+        print(f"{affected_count} rows affected")
+        db_data = cursor.fetchone()
+        subscribedByUsersList = db_data[0]
+        print("DB DATA : ", db_data)
+    except Exception as e:
+        print(e)
+
+    # check if user already subscribes for this creator
+    ifUserAlreadySubscribed = False
+    for id in subscribedByUsersList:
+        if id == subscribedByUserId:
+            ifUserAlreadySubscribed = True
+
+    response = {}
+    if ifUserAlreadySubscribed:
+        response["subscription_status"] = "INACTIVE"
+        updateFlaggedByUsersquery = "UPDATE users SET subscriber_count = subscriber_count - 1, subscribed_by=array_remove(subscribed_by, %s) WHERE user_id = %s"
+        try:
+            cursor.execute(
+                updateFlaggedByUsersquery,
+                (
+                    subscribedByUserId,
+                    subscribedForUserId,
+                ),
+            )
+            conn.commit()
+            affected_count = cursor.rowcount
+            print("----------------------------------------------------")
+            print(cursor.query.decode())
+            print(f"{affected_count} rows affected")
+            db_data = cursor.fetchone()
+            print("DB DATA : ", db_data)
+        except Exception as e:
+            print(e)
+        finally:
+            cursor.close()
+
+    else:
+        response["subscription_status"] = "ACTIVE"
+        updateFlaggedByUsersquery = "UPDATE users SET subscriber_count = subscriber_count + 1, subscribed_by=array_append(subscribed_by, %s) WHERE user_id = %s"
+        try:
+            cursor.execute(
+                updateFlaggedByUsersquery,
+                (
+                    subscribedByUserId,
+                    subscribedForUserId,
+                ),
+            )
+            conn.commit()
+            affected_count = cursor.rowcount
+            print("----------------------------------------------------")
+            print(cursor.query.decode())
+            print(f"{affected_count} rows affected")
+            db_data = cursor.fetchone()
+            print("DB DATA : ", db_data)
+        except Exception as e:
+            print(e)
+        finally:
+            updateUserEmailquery = "UPDATE users SET email = %s WHERE user_id = %s"
+            cursor.execute(
+                updateUserEmailquery,
+                (
+                    email_id,
+                    subscribedByUserId,
+                ),
+            )
+            conn.commit()
+            affected_count = cursor.rowcount
+            print(cursor.query.decode())
+            print(f"{affected_count} rows affected")
+            cursor.close()
+
+    print("----------------------------------------------------")
+
+    if affected_count == 0:
+        response["status"] = "failure"
+        response["message"] = "User subscription failed !"
+        return jsonify(response), 500
+    else:
+        response["status"] = "success"
+        if response["subscription_status"] == "ACTIVE":
+            response[
+                "message"
+            ] = "User has been subscribed to the creator's space successfully !, you will get timely notifications when new posts come out."
+        elif response["subscription_status"] == "INACTIVE":
+            response[
+                "message"
+            ] = "User has been unsubscribed to the creator's space successfully !, you will not receive any notifications for this creator's new posts."
+
         return jsonify(response), 200

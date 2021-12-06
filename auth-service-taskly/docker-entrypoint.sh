@@ -12,4 +12,4 @@ if [[ "$REQUIRE_DB_MIGRATIONS" == "True" ]]; then
     python3 migrations.py
 fi
 
-python3 -m flask run --host=0.0.0.0 --port=8081
+python3 -m flask run --host=0.0.0.0 --port=$PORT

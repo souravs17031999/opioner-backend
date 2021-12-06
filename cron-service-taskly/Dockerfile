@@ -16,4 +16,12 @@ RUN \
 
 COPY . .
 
+ENV PGHOST=postgres
+ENV PGUSER=postgres
+ENV PGPASSWORD=postgres
+ENV PGDATABASE=postgres 
+ENV ALLOWED_ORIGIN_HOST_PROD=*
+ENV DATABASE_URL=postgres
+ENV SENDGRID_API_KEY_PROD=sendgrid  
+
 ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]
