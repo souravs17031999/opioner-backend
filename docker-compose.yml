@@ -1,89 +1,89 @@
 version: "3.9"
 services:
-  # auth_service:
-  #   build:
-  #     context: auth-service
-  #     dockerfile: Dockerfile
-  #   restart: always
-  #   ports:
-  #     - "8081:8081"
-  #   depends_on:
-  #     - postgres
-  #   links:
-  #     - postgres
-  #   environment:
-  #     - PGHOST
-  #     - PGUSER
-  #     - PGPASSWORD
-  #     - PGDATABASE
-  #     - REQUIRE_DB_INSERT
-  #     - ALLOWED_ORIGIN_HOST_PROD
-  #     - TEST_JENKINS_BUILD
-  #     - REQUIRE_DB_MIGRATIONS
-  #     - PORT=8081
-  #     - DATABASE_URL
-  # user_service:
-  #   build:
-  #     context: user-service
-  #     dockerfile: Dockerfile
-  #   restart: always
-  #   ports:
-  #     - "8082:8082"
-  #   depends_on:
-  #     - postgres
-  #   links:
-  #     - postgres
-  #   environment:
-  #     - PGHOST
-  #     - PGUSER
-  #     - PGPASSWORD
-  #     - PGDATABASE
-  #     - ALLOWED_ORIGIN_HOST_PROD
-  #     - TEST_JENKINS_BUILD
-  #     - FIREBASE_PROFILE_PIC_PATH
-  #     - PORT=8082
-  #     - DATABASE_URL
-  # product_service:
-  #   build:
-  #     context: product-service
-  #     dockerfile: Dockerfile
-  #   restart: always
-  #   ports:
-  #     - "8083:8083"
-  #   depends_on:
-  #     - postgres
-  #   links:
-  #     - postgres
-  #   environment:
-  #     - PGHOST
-  #     - PGUSER
-  #     - PGPASSWORD
-  #     - PGDATABASE
-  #     - ALLOWED_ORIGIN_HOST_PROD
-  #     - TEST_JENKINS_BUILD
-  #     - PORT=8083
-  #     - DATABASE_URL
-  # notification_service:
-  #   build:
-  #     context: notification-service
-  #     dockerfile: Dockerfile
-  #   restart: always
-  #   ports:
-  #     - "8084:8084"
-  #   depends_on:
-  #     - postgres
-  #   links:
-  #     - postgres
-  #   environment:
-  #     - PGHOST
-  #     - PGUSER
-  #     - PGPASSWORD
-  #     - PGDATABASE
-  #     - ALLOWED_ORIGIN_HOST_PROD
-  #     - TEST_JENKINS_BUILD
-  #     - SENDGRID_API_KEY_PROD
-  #     - PORT=8084
-  #     - DATABASE_URL
+  auth_service:
+    build:
+      context: auth-service
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE
+      - REQUIRE_DB_INSERT
+      - ALLOWED_ORIGIN_HOST_PROD
+      - TEST_JENKINS_BUILD
+      - REQUIRE_DB_MIGRATIONS
+      - PORT=8081
+      - DATABASE_URL
+  user_service:
+    build:
+      context: user-service
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE
+      - ALLOWED_ORIGIN_HOST_PROD
+      - TEST_JENKINS_BUILD
+      - FIREBASE_PROFILE_PIC_PATH
+      - PORT=8082
+      - DATABASE_URL
+  product_service:
+    build:
+      context: product-service
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE
+      - ALLOWED_ORIGIN_HOST_PROD
+      - TEST_JENKINS_BUILD
+      - PORT=8083
+      - DATABASE_URL
+  notification_service:
+    build:
+      context: notification-service
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE
+      - ALLOWED_ORIGIN_HOST_PROD
+      - TEST_JENKINS_BUILD
+      - SENDGRID_API_KEY_PROD
+      - PORT=8084
+      - DATABASE_URL
   cron_service:
     build:
       context: cron-service
