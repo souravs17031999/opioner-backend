@@ -79,8 +79,8 @@ def send_mail(emailData, template_name):
         )
 
 
-# send gist of newly created feeds in last 24 hrs subscribed by followers at 09:00 AM IST
-@cron_schedular.scheduled_job(trigger="cron", hour="09", minute="59", second="00")
+# send gist of newly created feeds in last 24 hrs subscribed by followers at 07:00 PM IST
+@cron_schedular.scheduled_job(trigger="cron", hour="13", minute="30", second="00")
 def send_new_feeds_notification_for_creators():
 
     print(
