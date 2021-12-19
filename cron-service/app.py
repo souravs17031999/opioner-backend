@@ -102,87 +102,88 @@ def send_new_feeds_notification_for_creators():
     print("DB DATA : ", feeds)
     print("----------------------------------------------------")
 
-    # sender_email = "taskly.contact@gmail.com"
-    # # subject = "Top opinions only for you by your favourite creators"
-    # print("SENDER EMAIL : ", sender_email)
-    # # print("Subject: ", subject)
-    # tz_NY = pytz.timezone("Asia/Kolkata")
-    # datetime_NY = datetime.datetime.now(tz_NY)
-    # print("DATE FOR SENDING MAILS: ", datetime_NY.strftime("%A, %d %B %Y %I:%M%p"))
-    # print("----------------------------------------------------")
-    user_feed_info = {}
-    subscribers = set()
-    for feed in feeds:
-        if feed[0] in user_feed_info:
-            user_feed_info[feed[0]].append(
-                {
-                    "description": feed[1],
-                    "created_at": feed[2],
-                    "likes": feed[3],
-                    "comments": feed[4],
-                    "subscribed_by": feed[5],
-                    "username": feed[6],
-                    "firstname": feed[7],
-                }
-            )
-        else:
-            user_feed_info[feed[0]] = [
-                {
-                    "description": feed[1],
-                    "created_at": feed[2],
-                    "likes": feed[3],
-                    "comments": feed[4],
-                    "subscribed_by": feed[5],
-                    "username": feed[6],
-                    "firstname": feed[7],
-                }
-            ]
-
-        for id in feed[5]:
-            subscribers.add(id)
-
-    userInfoFetchQuery = (
-        "SELECT u.user_id, u.firstname, u.email FROM users u WHERE user_id IN %s"
-    )
-
-    cursor.execute(userInfoFetchQuery, (tuple(subscribers),))
-
-    user_subscribers_data = cursor.fetchall()
-
-    print("----------------------------------------------------")
-    print(cursor.query.decode())
-    affected_count = cursor.rowcount
-    print(f"{affected_count} rows affected")
-    print("DB DATA : ", user_subscribers_data)
+    tz_NY = pytz.timezone("Asia/Kolkata")
+    datetime_NY = datetime.datetime.now(tz_NY)
+    print("DATE FOR SENDING MAILS: ", datetime_NY.strftime("%A, %d %B %Y %I:%M%p"))
     print("----------------------------------------------------")
 
-    subscribers_email_data = {}
-
-    for user in user_subscribers_data:
-        subscribers_email_data[user[0]] = {"name": user[1], "email": user[2]}
-
-    for user_id, user_data in user_feed_info.items():
-        emailData = {}
-        for subscriber_id in user_data[0]["subscribed_by"]:
-
-            emailData[
-                "subject"
-            ] = f"Hi {subscribers_email_data[subscriber_id]['name']}, Top opinions only for you by your favourite creators"
-            emailData["user_email"] = subscribers_email_data[subscriber_id]["email"]
-            emailData["mail_content"] = {"feeds": []}
-            for feed in user_data:
-                emailData["mail_content"]["feeds"].append(
+    if len(feeds) != 0:
+        user_feed_info = {}
+        subscribers = set()
+        for feed in feeds:
+            if feed[0] in user_feed_info:
+                user_feed_info[feed[0]].append(
                     {
-                        "created_by_username": feed["username"],
-                        "created_by_firstname": feed["firstname"],
-                        "created_at": feed["created_at"],
-                        "description": feed["description"],
-                        "likes": feed["likes"],
-                        "comments": feed["comments"],
+                        "description": feed[1],
+                        "created_at": feed[2],
+                        "likes": feed[3],
+                        "comments": feed[4],
+                        "subscribed_by": feed[5],
+                        "username": feed[6],
+                        "firstname": feed[7],
                     }
                 )
+            else:
+                user_feed_info[feed[0]] = [
+                    {
+                        "description": feed[1],
+                        "created_at": feed[2],
+                        "likes": feed[3],
+                        "comments": feed[4],
+                        "subscribed_by": feed[5],
+                        "username": feed[6],
+                        "firstname": feed[7],
+                    }
+                ]
 
-            send_mail(emailData, "feeds.html")
+            for id in feed[5]:
+                subscribers.add(id)
+
+        userInfoFetchQuery = (
+            "SELECT u.user_id, u.firstname, u.email FROM users u WHERE user_id IN %s"
+        )
+
+        cursor.execute(userInfoFetchQuery, (tuple(subscribers),))
+
+        user_subscribers_data = cursor.fetchall()
+
+        print("----------------------------------------------------")
+        print(cursor.query.decode())
+        affected_count = cursor.rowcount
+        print(f"{affected_count} rows affected")
+        print("DB DATA : ", user_subscribers_data)
+        print("----------------------------------------------------")
+
+        subscribers_email_data = {}
+
+        for user in user_subscribers_data:
+            subscribers_email_data[user[0]] = {"name": user[1], "email": user[2]}
+
+        for user_id, user_data in user_feed_info.items():
+            emailData = {}
+            for subscriber_id in user_data[0]["subscribed_by"]:
+
+                emailData[
+                    "subject"
+                ] = f"Hi {subscribers_email_data[subscriber_id]['name']}, Top opinions only for you by your favourite creators"
+                emailData["user_email"] = subscribers_email_data[subscriber_id]["email"]
+                emailData["mail_content"] = {"feeds": []}
+                for feed in user_data:
+                    emailData["mail_content"]["feeds"].append(
+                        {
+                            "created_by_username": feed["username"],
+                            "created_by_firstname": feed["firstname"],
+                            "created_at": feed["created_at"],
+                            "description": feed["description"],
+                            "likes": feed["likes"],
+                            "comments": feed["comments"],
+                        }
+                    )
+
+                send_mail(emailData, "feeds.html")
+
+    else:
+        print("============= NO NEW FEEDS FOUND IN LAST 24 HOURS =================")
 
     cursor.close()
 
