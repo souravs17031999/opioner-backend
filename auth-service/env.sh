@@ -16,6 +16,9 @@ elif [ -z $PGPASSWORD ]; then
 elif [ -z $PGDATABASE ]; then 
     echo "------------------ [ERROR]: PGDATABASE ENV VAR NOT DEFINED"
     exit 1
+elif [ -z $REDIS_URL ]; then 
+    echo "------------------ [ERROR]: REDIS_URL ENV VAR NOT DEFINED"
+    exit 1
 elif [ -z $REQUIRE_DB_INSERT ]; then 
     echo "------------------ [WARNING]: REQUIRE_DB_INSERT ENV VAR NOT DEFINED, DEFAULTING TO FALSE"
     REQUIRE_DB_INSERT=FALSE

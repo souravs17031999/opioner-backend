@@ -22,5 +22,7 @@ ENV PGPASSWORD=postgres
 ENV PGDATABASE=postgres 
 ENV ALLOWED_ORIGIN_HOST_PROD=*
 ENV DATABASE_URL=postgres
+ENV REDIS_URL=redis  
+ENV NOTIFICATION_INTERNAL_URL=http://notification_service:8084
 
 ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]

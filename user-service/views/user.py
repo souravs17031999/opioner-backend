@@ -178,9 +178,7 @@ def fetch_user_data():
     cursor = conn.cursor()
     affected_count = 0
 
-    query = (
-        "SELECT username,firstname,lastname,phone,email FROM users WHERE user_id = %s"
-    )
+    query = "SELECT username,firstname,lastname,phone,email,google_profile_url FROM users WHERE user_id = %s"
     try:
         cursor.execute(query, (user_id,))
         affected_count = cursor.rowcount
@@ -206,6 +204,7 @@ def fetch_user_data():
         APP_UPLOAD_FIREBASE_PATH,
     )
     avatar_fetched_image_path = storage.child(APP_UPLOAD_FIREBASE_PATH).get_url(user_id)
+    print("============ Got user image: ", avatar_fetched_image_path)
 
     response = {}
     response["status"] = "success"
@@ -218,6 +217,7 @@ def fetch_user_data():
             "phone": db_data[3],
             "email": db_data[4],
             "profile_picture_url": avatar_fetched_image_path,
+            "google_profile_url": db_data[5],
         }
 
         return jsonify(response), 200
@@ -257,7 +257,7 @@ def update_profile_pic_for_user():
     return jsonify(response), 200
 
 
-@user.route("/fetch-user-status", methods=["POST"])
+@user.route("/fetch/user-status", methods=["POST"])
 def fetch_user_status_auth():
 
     post_request = request.get_json(force=True)
@@ -273,8 +273,8 @@ def fetch_user_status_auth():
         print("----------------------------------------------------")
         print(cursor.query.decode())
         print(f"{affected_count} rows affected")
-        db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
+        user_data = cursor.fetchone()
+        print("DB DATA : ", user_data)
     except Exception as e:
         print(e)
     finally:
@@ -290,6 +290,7 @@ def fetch_user_status_auth():
     else:
         response["status"] = "success"
         response["message"] = "User is active and found in our records !"
+        response["user_data"] = {"firstname": user_data[3], "email": user_data[5]}
         return jsonify(response), 200
 
 
@@ -427,4 +428,63 @@ def subscribe_user(loggedInuser):
                 "message"
             ] = "User has been unsubscribed to the creator's space successfully !, you will not receive any notifications for this creator's new posts."
 
+        return jsonify(response), 200
+
+
+@user.route("/data", methods=["DELETE"])
+def delete_user_data():
+
+    post_request = request.get_json(force=True)
+
+    # conn = mysql.connect()
+    cursor = conn.cursor()
+    affected_count = 0
+
+    deleteUserDataQuery = "DELETE FROM users u WHERE u.user_id = %s"
+    try:
+        cursor.execute(deleteUserDataQuery, (post_request["user_id"],))
+        conn.commit()
+        affected_count = cursor.rowcount
+        print("----------------------------------------------------")
+        print(cursor.query.decode())
+        print(f"{affected_count} rows affected")
+    except Exception as e:
+        print(e)
+
+    deleteSessionsDataQuery = "DELETE FROM login_sessions ls WHERE ls.user_id = %s"
+    try:
+        cursor.execute(deleteSessionsDataQuery, (post_request["user_id"],))
+        conn.commit()
+        affected_count = cursor.rowcount
+        print("----------------------------------------------------")
+        print(cursor.query.decode())
+        print(f"{affected_count} rows affected")
+    except Exception as e:
+        print(e)
+
+    deleteNotificationsDataQuery = (
+        "DELETE FROM user_notifications un WHERE un.user_id = %s"
+    )
+    try:
+        cursor.execute(deleteNotificationsDataQuery, (post_request["user_id"],))
+        conn.commit()
+        affected_count = cursor.rowcount
+        print("----------------------------------------------------")
+        print(cursor.query.decode())
+        print(f"{affected_count} rows affected")
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+
+    print("----------------------------------------------------")
+
+    response = {}
+    if affected_count == 0:
+        response["status"] = "failure"
+        response["message"] = "Deletion of user failed !"
+        return jsonify(response), 500
+    else:
+        response["status"] = "success"
+        response["message"] = "User data deleted successfully !"
         return jsonify(response), 200

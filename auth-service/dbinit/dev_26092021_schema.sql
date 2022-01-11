@@ -123,6 +123,26 @@ CREATE TABLE IF NOT EXISTS public.users (
 );
 ALTER TABLE public.users OWNER TO postgres;
 --
+-- Name: login_sessions; Type: TABLE; Schema: public; Owner: postgres
+--
+CREATE TABLE IF NOT EXISTS public.login_sessions (
+    user_id integer DEFAULT nextval('public.login_sessions_user_id_seq'::regclass) NOT NULL,
+    origin text,
+    user_agent text,
+    host text,
+    active_sessions integer DEFAULT 0,
+    last_logged_in timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    last_logged_out timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+--
+-- Name: login_sessions_user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+CREATE SEQUENCE IF NOT EXISTS public.login_sessions_user_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+---
+ALTER TABLE public.login_sessions_user_id_seq OWNER TO postgres;
+---
+ALTER TABLE public.login_sessions OWNER TO postgres;
+--
 -- Name: users_user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 CREATE SEQUENCE IF NOT EXISTS public.users_user_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
@@ -173,6 +193,12 @@ ADD CONSTRAINT feed_tracking_user_status_pkey PRIMARY KEY (id);
 ALTER TABLE public.feed_tracking_comments DROP CONSTRAINT IF EXISTS feed_tracking_comments_pkey;
 ALTER TABLE ONLY public.feed_tracking_comments
 ADD CONSTRAINT feed_tracking_comments_pkey PRIMARY KEY (comment_id);
+--
+-- Name: login_sessions login_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+ALTER TABLE public.login_sessions DROP CONSTRAINT IF EXISTS login_sessions_pkey;
+ALTER TABLE ONLY public.login_sessions
+ADD CONSTRAINT login_sessions_pkey PRIMARY KEY (user_id);
 --
 -- PostgreSQL database dump complete
 --

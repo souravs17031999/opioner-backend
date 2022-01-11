@@ -101,12 +101,27 @@ def generate_mail_content(template_name, **template_vars):
 def send_sendgrid_mail(emailData, template_name):
 
     sender_email = SENDGRID_SENDER_EMAIL
-    subject = emailData["subject"]
-    receiver_email = emailData["user_email"]
+    subject = None
+    receiver_email = None
+    if "subject" in emailData:
+        subject = emailData["subject"]
+    else:
+        subject = ""
+        print("[WARNING]: Subject not present, sending mail with empty subject")
+
+    if "user_email" in emailData:
+        receiver_email = emailData["user_email"]
+    else:
+        print("[WARNING]: Receiver email not found in request")
+        return {
+            "status": "failure",
+            "message": "Email notification failed due to receiver email's not found",
+        }
 
     print("SENDER EMAIL : ", sender_email)
     print("RECEIVER EMAIL : ", receiver_email)
     print("Subject: ", subject)
+    print("EmailData: ", emailData)
 
     mail_body = generate_mail_content(template_name, emailData=emailData)
     message = Mail(
@@ -136,6 +151,26 @@ def send_sendgrid_mail(emailData, template_name):
 @notification.route("/test", methods=["GET", "POST"])
 def test_notification_service():
     return "<h1> This is notification service testing, service is up and running !</h1>"
+
+
+# only for Internal usage
+@notification.route("/send/email", methods=["POST"])
+def send_email_notifications_for_user():
+
+    post_request = request.get_json(force=True)
+    emailData = post_request["email_data"]
+    templateName = post_request["template_name"]
+    serviceName = post_request["service"]
+    response = {}
+    print("====== serving for service: ", serviceName)
+    if send_sendgrid_mail(emailData, templateName)["status"] == "success":
+        response["status"] = "success"
+        response["message"] = "Email notifications send to user successfully !"
+        return jsonify(response), 200
+    else:
+        response["status"] = "failure"
+        response["message"] = "Failed to send email notifications !"
+        return jsonify(response), 500
 
 
 @notification.route("/insert-notification", methods=["POST"])

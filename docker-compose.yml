@@ -9,8 +9,10 @@ services:
       - "8081:8081"
     depends_on:
       - postgres
+      - redis
     links:
       - postgres
+      - redis
     environment:
       - PGHOST
       - PGUSER
@@ -22,6 +24,13 @@ services:
       - REQUIRE_DB_MIGRATIONS
       - PORT=8081
       - DATABASE_URL
+      - REDIS_DB
+      - REDIS_USERNAME
+      - REDIS_HOST
+      - REDIS_PASSWORD
+      - REDIS_PORT 
+      - REDIS_URL 
+      - NOTIFICATION_INTERNAL_URL
   user_service:
     build:
       context: user-service
@@ -117,3 +126,8 @@ services:
     volumes:
       - ./dbdata:/var/lib/postgresql/data
       - ./auth-service-taskly/dbinit/dev_26092021.sql:/docker-entrypoint-initdb.d/my_dump.sql'
+  redis:
+    image: redis:6.2.6
+    restart: always
+    ports:
+      - "6380:6379"

@@ -93,33 +93,33 @@
                            </table> 
                            <table class="es-header-body" cellspacing="0" cellpadding="0" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background:white;width:600px">
                               <tr>
-                                 <td>
-                                    {% for feed in emailData["mail_content"]["feeds"] %}
-                                       <table border="0" width="500px" cellpadding="0" cellspacing="0" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;margin-top:10px;border-radius: 8px;width: 500px;background: rgb(250 244 244);" role="presentation"> 
-                                          <tr>
-                                             <td style="width: 50%;"><div class="main-left-content-item" style="text-align: left;">{{ feed["created_by_username"] }}</div></td>
-                                          </tr>
-                                          <tr>
-                                             <td style="width: 50%;"><div class="main-left-content-item" style="text-align: left;">{{ feed["description"] }}</div></td>
-                                          </tr>
-                                          <tr>
-                                             <td style="width: 50%; padding-bottom: 15px;">
-                                                <span class="main-left-content-item" style="text-align: left;">
-                                                   {{ feed["likes"] }} likes 
-                                                </span>
-                                                <span class="main-left-content-item" style="text-align: left;">
-                                                   {{ feed["comments"] }} comments
-                                                </span>
-                                             </td>
-                                          </tr>
-                                       </table>
-                                    {% endfor %}
+                                 <td class="es-m-p0r es-m-p20b" valign="top" align="center" style="padding:0;Margin:0;width:180px">
+                                    <p>Please enter following OTP for successfully verifying your identity at Opioner</p>
                                  </td>
                               </tr>
                            </table>
                            <table class="es-header-body" cellspacing="0" cellpadding="0" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background:white;width:600px">
                               <tr>
+                                 <td class="es-m-p0r es-m-p20b" valign="top" align="center" style="padding:0;Margin:0;width:50px">
+                                    <td style="width: 30px;height: 50px;border: none;line-height: 50px;text-align: center;font-size: 24px;font-family: 'Raleway', sans-serif;font-weight: 200;color: #673ab7;margin: 0 2px;outline: none; background: #e4e8fa; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">{{ emailData["otp"][0] }}</td>
+                                    <td style="width: 30px;height: 50px;border: none;line-height: 50px;text-align: center;font-size: 24px;font-family: 'Raleway', sans-serif;font-weight: 200;color: #673ab7;margin: 0 2px;outline: none; background: #e4e8fa;">{{ emailData["otp"][1] }}</td>
+                                    <td style="width: 30px;height: 50px;border: none;line-height: 50px;text-align: center;font-size: 24px;font-family: 'Raleway', sans-serif;font-weight: 200;color: #673ab7;margin: 0 2px;outline: none; background: #e4e8fa;">{{ emailData["otp"][2] }}</td>
+                                    <td style="width: 30px;height: 50px;border: none;line-height: 50px;text-align: center;font-size: 24px;font-family: 'Raleway', sans-serif;font-weight: 200;color: #673ab7;margin: 0 2px;outline: none; background: #e4e8fa;">{{ emailData["otp"][3] }}</td>
+                                    <td style="width: 30px;height: 50px;border: none;line-height: 50px;text-align: center;font-size: 24px;font-family: 'Raleway', sans-serif;font-weight: 200;color: #673ab7;margin: 0 2px;outline: none; background: #e4e8fa;">{{ emailData["otp"][4] }}</td>
+                                    <td style="width: 30px;height: 50px;border: none;line-height: 50px;text-align: center;font-size: 24px;font-family: 'Raleway', sans-serif;font-weight: 200;color: #673ab7;margin: 0 2px;outline: none; background: #e4e8fa; border-top-right-radius: 8px; border-bottom-right-radius: 8px;">{{ emailData["otp"][5] }}</td>
+                                    <td class="es-m-p0r es-m-p20b" valign="top" align="center" style="padding:0;Margin:0;width:50px">
+                              </tr>
+                           </table>
+                           <table class="es-header-body" cellspacing="0" cellpadding="0" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background:white;width:600px">
+                              <tr>
                                  <td class="receipt-line-break"></td>
+                              </tr>
+                           </table>   
+                           <table cellspacing="0" cellpadding="0" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background:white;width:600px;height: 150px;">
+                              <tr>
+                                 <td class="es-m-p0r es-m-p20b" valign="top" align="center" style="margin-top: 30px; width:180px">
+                                    <div class="content-item" style="margin-top: 30px;">Please don't share OTP with anyone.</div>
+                                 </td>
                               </tr>
                            </table>   
                            <table cellspacing="0" cellpadding="0" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background:white;width:600px;height: 100px;">
