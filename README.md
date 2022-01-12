@@ -1,6 +1,6 @@
-# taskly-backend-docker-app
+# Opioner-backend-docker-app
 
-# Goal - Make your day productive with us
+# Goal - MAKE YOUR OPINION COUNT AND SHARE WITH WORLD
 
 # This project is meant to maintain the backend code for the [taskly - best online task manager app](https://souravs17031999.github.io/taskly-home/).
 
@@ -10,13 +10,13 @@ Frontend of [taskly app](https://github.com/souravs17031999/taskly-home) is serv
 ## Running application locally:
   
 - Clone this repo    
-  `git clone git@github.com:souravs17031999/taskly-backend-docker-app.git`      
+  `git clone git@github.com:souravs17031999/opioner-backend.git`      
 - Start docker service if not started already on your system (Install docker from [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04) and docker-compose from [here](https://www.digitalocean.com/community/tutorials/how-to-install-docker-compose-on-ubuntu-18-04))           
 - Run all services with docker-compose from cloned project root directory         
   `docker-compose up --build`      
 - Your services should be up and running.      
 
-### ENV VARIABLES FOR RUNNING:
+### ENV VARIABLES FOR RUNNING (before starting the service):
 
 - PGHOST
 - PGUSER
@@ -29,8 +29,17 @@ Frontend of [taskly app](https://github.com/souravs17031999/taskly-home) is serv
 - ALLOWED_ORIGIN_HOST_PROD
 - REQUIRE_DB_MIGRATIONS
 - REQUIRE_DB_INSERT
-- SENDGRID_API_KEY_PROD    
+- SENDGRID_API_KEY_PROD
 - FIREBASE_PROFILE_PIC_PATH
+- REDIS_URL
+- NOTIFICATION_INTERNAL_URL
+
+## Useful: 
+- Each service is built independently using it's own Dockerfile and pushed to Heroku container registeries.
+- Then, the container is released into production.
+- Final built image (for every service) contains the ENTRYPOINT which starts the flask api service and runs any scripts supplied before actually starting the service.
+- Every service waits for the postgres service to start first (controlled by script), as every service depends on this one.
+- Repo contains db migration scripts for local setup.
   
 ### Notes:      
 - The actual database for app will be mounted automatically at `dbdata` directory owned by docker.     
