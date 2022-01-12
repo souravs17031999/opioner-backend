@@ -15,3 +15,7 @@ test:
 publish:
 	@echo "MAKE publish ==========================================="
 	build-scripts/publish.sh  
+
+local:
+	@echo "MAKE local ==========================================="
+	docker-compose up --build  
