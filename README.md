@@ -2,10 +2,10 @@
 
 # Goal - MAKE YOUR OPINION COUNT AND SHARE WITH WORLD
 
-# This project is meant to maintain the backend code for the [Opioner - MAKE YOUR OPINION COUNT AND SHARE WITH WORLD](https://souravs17031999.github.io/taskly-home/).
+# This project is meant to maintain the backend code for the [Opioner - MAKE YOUR OPINION COUNT AND SHARE WITH WORLD](https://souravs17031999.github.io/opioner-home).
 
 Currently, the project is deployed using Heroku servers and all requests are served through Heroku API gateway.
-Frontend of [Opioner app](https://github.com/souravs17031999/Opioner-home) is served through Github pages but is planned to deploy through AWS in future.
+Frontend of [Opioner app](https://github.com/souravs17031999/opioner-home) is served through Github pages but is planned to deploy through AWS in future.
 
 ## Running application locally:
   
@@ -33,6 +33,16 @@ Frontend of [Opioner app](https://github.com/souravs17031999/Opioner-home) is se
 - FIREBASE_PROFILE_PIC_PATH
 - REDIS_URL
 - NOTIFICATION_INTERNAL_URL
+
+### Microservices:
+
+- [Auth-service](https://github.com/souravs17031999/opioner-backend/tree/master/auth-service)
+- [Product-service](https://github.com/souravs17031999/opioner-backend/tree/master/product-service)
+- [User-service](https://github.com/souravs17031999/opioner-backend/tree/master/user-service)
+- [Notification-service](https://github.com/souravs17031999/opioner-backend/tree/master/notification-service)
+- [Cron-service](https://github.com/souravs17031999/opioner-backend/tree/master/cron-service)
+- Postgres
+- Redis
 
 ## Useful: 
 - Each service is built independently using it's own Dockerfile and pushed to Heroku container registeries.
