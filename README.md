@@ -2,10 +2,10 @@
 
 # Goal - MAKE YOUR OPINION COUNT AND SHARE WITH WORLD
 
-# This project is meant to maintain the backend code for the [taskly - best online task manager app](https://souravs17031999.github.io/taskly-home/).
+# This project is meant to maintain the backend code for the [Opioner - MAKE YOUR OPINION COUNT AND SHARE WITH WORLD](https://souravs17031999.github.io/taskly-home/).
 
 Currently, the project is deployed using Heroku servers and all requests are served through Heroku API gateway.
-Frontend of [taskly app](https://github.com/souravs17031999/taskly-home) is served through Github pages but is planned to deploy through AWS in future.
+Frontend of [Opioner app](https://github.com/souravs17031999/Opioner-home) is served through Github pages but is planned to deploy through AWS in future.
 
 ## Running application locally:
   
