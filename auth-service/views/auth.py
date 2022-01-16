@@ -667,7 +667,7 @@ def verify_OTP_signup():
         return jsonify(response), 500
 
 
-def login_to_app_via_google(post_request, user_data):
+def login_to_app_via_social(post_request, user_data):
 
     cursor = conn.cursor()
     HOST = request.headers.get("Host")
@@ -695,8 +695,14 @@ def login_to_app_via_google(post_request, user_data):
         print(f"{affected_count} rows affected")
         print("----------------------------------------------------")
     except Exception as e:
-        print("Error logging in user via Google signin: ", e)
-        return False, "Error logging in user via Google signin"
+        print(
+            f"Error logging in user via {post_request['action_event_source']} signin: ",
+            e,
+        )
+        return (
+            False,
+            f"Error logging in user via {post_request['action_event_source']} signin:",
+        )
     finally:
         cursor.close()
 
@@ -709,39 +715,68 @@ def login_to_app_via_google(post_request, user_data):
     return True, user_data
 
 
-def signup_to_app_via_google(post_request):
+def signup_to_app_via_social(post_request):
 
     cursor = conn.cursor()
 
     createdUserId = None
-    insertQuery = "INSERT INTO users(username, firstname, email, google_profile_url, is_google_verified, google_token_id) VALUES(%s, %s, %s, %s, %s, %s)"
-    try:
-        cursor.execute(
-            insertQuery,
-            (
-                post_request["username"],
-                post_request["firstname"],
-                post_request["email"],
-                post_request["google_profile_url"],
-                1,
-                post_request["google_token_id"],
-            ),
-        )
-        conn.commit()
-        affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{cursor.rowcount} rows affected")
-    except Exception as e:
-        print("ERROR in inserting users: ", e)
-        return False, "ERROR: ERROR in user creation"
-    finally:
-        selectQuery = "SELECT u.user_id FROM users u WHERE username = %s"
-        cursor.execute(selectQuery, (post_request["username"],))
-        print(cursor.query.decode())
-        print(f"{cursor.rowcount} rows affected")
-        db_data = cursor.fetchone()
-        createdUserId = db_data[0]
-        print("DB DATA : ", db_data)
+    affected_count = 0
+
+    if post_request["action_event_source"] == "google":
+
+        insertQuery = "INSERT INTO users(username, firstname, email, google_profile_url, is_google_verified, google_token_id) VALUES(%s, %s, %s, %s, %s, %s)"
+        try:
+            cursor.execute(
+                insertQuery,
+                (
+                    post_request["username"],
+                    post_request["firstname"],
+                    post_request["email"],
+                    post_request["google_profile_url"],
+                    1,
+                    post_request["google_token_id"],
+                ),
+            )
+            conn.commit()
+            affected_count = cursor.rowcount
+            print(cursor.query.decode())
+            print(f"{cursor.rowcount} rows affected")
+        except Exception as e:
+            print("ERROR in inserting users for google signin: ", e)
+            return False, "ERROR: ERROR in user creation for google signin user"
+
+    elif post_request["action_event_source"] == "facebook":
+
+        insertQuery = "INSERT INTO users(username, firstname, email, facebook_profile_url, is_facebook_verified, facebook_token_id, facebook_user_id, gender) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
+        try:
+            cursor.execute(
+                insertQuery,
+                (
+                    post_request["username"],
+                    post_request["firstname"],
+                    post_request["email"],
+                    post_request["facebook_profile_url"],
+                    1,
+                    post_request["facebook_token_id"],
+                    post_request["facebook_user_id"],
+                    post_request["gender"],
+                ),
+            )
+            conn.commit()
+            affected_count = cursor.rowcount
+            print(cursor.query.decode())
+            print(f"{cursor.rowcount} rows affected")
+        except Exception as e:
+            print("ERROR in inserting users for facebook signin: ", e)
+            return False, "ERROR: ERROR in user creation for facebook signin user"
+
+    selectQuery = "SELECT u.user_id FROM users u WHERE email = %s"
+    cursor.execute(selectQuery, (post_request["email"],))
+    print(cursor.query.decode())
+    print(f"{cursor.rowcount} rows affected")
+    db_data = cursor.fetchone()
+    createdUserId = db_data[0]
+    print("DB DATA : ", db_data)
 
     print("----------------------------------------------------")
 
@@ -802,8 +837,8 @@ def signup_to_app_via_google(post_request):
         return True, user_data
 
 
-@auth.route("/verify/google/sign", methods=["POST"])
-def verify_google_sign_up():
+@auth.route("/verify/social/sign", methods=["POST"])
+def verify_social_sign_up():
 
     post_request = request.get_json(force=True)
     response = {}
@@ -813,6 +848,14 @@ def verify_google_sign_up():
     authSelectQuery = "SELECT * FROM users WHERE email = %s"
     affected_count = 0
     user_data = None
+
+    if post_request.get("email") is None:
+        print("[Warning]: Email not found in request API")
+        response["status"] = "failure"
+        response["verified_status"] = False
+        response["message"] = "Email not found in request API"
+        return jsonify(response), 403
+
     try:
         cursor.execute(authSelectQuery, (post_request["email"],))
         print("----------------------------------------------------")
@@ -826,28 +869,51 @@ def verify_google_sign_up():
         response["verified_status"] = False
         response[
             "message"
-        ] = "ERROR in fetching user data while verifying/signing up google user"
+        ] = "ERROR in fetching user data while verifying/signing up social media user"
         return jsonify(response), 500
     finally:
         cursor.close()
 
-    post_request = {
-        "username": post_request["email"],
-        "firstname": post_request["firstname"],
-        "email": post_request["email"],
-        "google_profile_url": post_request["google_profile_url"],
-        "google_token_id": post_request["google_token_id"],
-    }
+    post_request_for_social = None
+
+    if post_request.get("action_event_source") == "google":
+
+        post_request_for_social = {
+            "action_event_source": "google",
+            "username": post_request["email"],
+            "firstname": post_request["firstname"],
+            "email": post_request["email"],
+            "google_profile_url": post_request["google_profile_url"],
+            "google_token_id": post_request["google_token_id"],
+        }
+    elif post_request.get("action_event_source") == "facebook":
+        post_request_for_social = {
+            "action_event_source": "facebook",
+            "name": post_request["name"],
+            "username": post_request["email"],
+            "firstname": post_request["firstname"],
+            "email": post_request["email"],
+            "facebook_profile_url": post_request["facebook_profile_url"],
+            "facebook_token_id": post_request["facebook_token_id"],
+            "facebook_user_id": post_request["facebook_user_id"],
+            "gender": post_request["gender"],
+        }
 
     userResponse = None
     action = None
+
     if affected_count == 1:
-        print("[debug]: User already found, logging in user ....")
-        userResponse = login_to_app_via_google(post_request, user_data)
-        action = "LOGIN"
+        is_google_verified = True if user_data[11] else False
+        is_facebook_verified = True if user_data[14] else False
+        if (is_google_verified and post_request["action_event_source"] == "google") or (
+            is_facebook_verified and post_request["action_event_source"] == "facebook"
+        ):
+            print("[debug]: User already found, logging in user ....")
+            userResponse = login_to_app_via_social(post_request_for_social, user_data)
+            action = "LOGIN"
     elif affected_count == 0:
         print("[debug]: User not found, signing up the user ....")
-        userResponse = signup_to_app_via_google(post_request)
+        userResponse = signup_to_app_via_social(post_request_for_social)
         action = "SIGNUP"
 
     if userResponse is not None and userResponse[0]:
@@ -865,4 +931,8 @@ def verify_google_sign_up():
         response["status"] = "failure"
         response["verified_status"] = False
         response["message"] = userResponse[1]
+        if action == "LOGIN":
+            response["is_new_user"] = False
+        elif action == "SIGNUP":
+            response["is_new_user"] = True
         return jsonify(response), 500

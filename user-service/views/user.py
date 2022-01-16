@@ -178,7 +178,7 @@ def fetch_user_data():
     cursor = conn.cursor()
     affected_count = 0
 
-    query = "SELECT username,firstname,lastname,phone,email,google_profile_url FROM users WHERE user_id = %s"
+    query = "SELECT username,firstname,lastname,phone,email,is_google_verified,google_profile_url,is_facebook_verified,facebook_profile_url FROM users WHERE user_id = %s"
     try:
         cursor.execute(query, (user_id,))
         affected_count = cursor.rowcount
@@ -217,7 +217,10 @@ def fetch_user_data():
             "phone": db_data[3],
             "email": db_data[4],
             "profile_picture_url": avatar_fetched_image_path,
-            "google_profile_url": db_data[5],
+            "is_google_verified": db_data[5],
+            "google_profile_url": db_data[6],
+            "is_facebook_verified": db_data[7],
+            "facebook_profile_url": db_data[8],
         }
 
         return jsonify(response), 200
