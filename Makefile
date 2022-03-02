@@ -1,9 +1,5 @@
 .PHONY: test publish
 
-env:
-	@echo "MAKE env ==========================================="
-	build-scripts/make-env.sh
-
 build:
 	@echo "MAKE build ==========================================="
 	build-scripts/docker-flow.sh  
@@ -15,6 +11,9 @@ test:
 publish:
 	@echo "MAKE publish ==========================================="
 	build-scripts/publish.sh  
+
+clean:
+	@echo "MAKE clean ==========================================="  
 
 local:
 	@echo "MAKE local ==========================================="
