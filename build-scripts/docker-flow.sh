@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-source env.sh
+source ./env.sh
 
 echo " Build docker image for opioner backend app ......"
 docker-compose $BUILD_COMPOSE_LIST build
