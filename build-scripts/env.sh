@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 echo "exporting environment variables (build-scripts) .... "
 
 export TOPDIR=$(git rev-parse --show-toplevel)
