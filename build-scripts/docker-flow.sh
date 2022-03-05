@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 source ./env.sh
 
 echo " Build docker image for opioner backend app ......"
