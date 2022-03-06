@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/sh
 set -ex 
 
 export FLASK_APP=app.py
