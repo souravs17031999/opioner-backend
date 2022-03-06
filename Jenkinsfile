@@ -32,9 +32,7 @@ pipeline {
         }
         stage ('test') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'make test'
-                }
+                sh 'make test'
             }
         }
         stage ('publish') {
