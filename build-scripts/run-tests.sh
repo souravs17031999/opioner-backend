@@ -1,3 +1,7 @@
+#!/usr/bin/env sh
+
+source $WORKSPACE/build-scripts/env.sh
+
 echo "----------------- Building Docker containers for apitest ..... "
 
 docker-compose $TEST_COMPOSE_LIST up --build --abort-on-container-exit
