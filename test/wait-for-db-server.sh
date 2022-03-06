@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 export TIMEOUT=120
 export AUTH_SERVER_URL=http://auth_service:8081/auth/test
 

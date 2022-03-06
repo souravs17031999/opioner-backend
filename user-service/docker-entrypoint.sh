@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 export FLASK_APP=app.py
 export FLASK_ENV=development 

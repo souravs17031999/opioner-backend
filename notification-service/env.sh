@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 echo "--------------- TESTING FOR REQUIRED ENV VARIABLES HERE FOR NOTIFICATION-SERVICE TASKLY ------------------"
 # export REQUIRE_DB_INSERT=True 
