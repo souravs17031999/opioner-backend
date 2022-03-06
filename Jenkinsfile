@@ -25,12 +25,6 @@ pipeline {
     }
 
     stages {
-        // stage ('permission') {
-        //     steps {
-        //         echo "------------------------- Fixing permissions BUILD STAGE ON JENKINS ------------------------"
-        //         sh "sudo chown root:jenkins /run/docker.sock"
-        //     }
-        // }
         stage ('build') {
             steps {
                 sh 'make build'
@@ -46,16 +40,11 @@ pipeline {
                 sh 'make publish'
             }
         }
-        stage ('clean') {
-            steps {
-                sh 'make clean'
-            }
-        }
     }
     post {
         always {
             echo "---------------------- FINAL STEP OF JENKINS RUNS ALWAYS ----------------------"
-            // sh "sudo chown root:souravcovenant /run/docker.sock"
+            sh 'make clean'
         }
     }
 }

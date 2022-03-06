@@ -15,6 +15,6 @@ else
 fi
 echo "Got tag: $TAGNAME"
 
-export apitest="-f test/docker-compose.yml"
+export TEST_CONTAINER="test_service"
 export BUILD_COMPOSE_LIST="-f $TOPDIR/docker-compose.yml"
-export TEST_COMPOSE_LIST="-f $TOPDIR/docker-compose.yml ${apitest}"
+export TEST_COMPOSE_LIST="-f $TOPDIR/docker-compose.yml -f test/docker-compose.yml"
