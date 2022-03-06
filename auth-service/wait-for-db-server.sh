@@ -1,5 +1,4 @@
-#!/usr/bin/env sh
-
+#!/bin/sh
 echo "------------------------- WAITING FOR SERVER FOR POSTGRES DB STARTED -------------------------"
 
 while ! pg_isready -h $PGHOST

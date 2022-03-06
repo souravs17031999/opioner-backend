@@ -1,5 +1,4 @@
-#!/usr/bin/env sh
-
+#!/bin/sh
 echo "--------------- TESTING FOR REQUIRED ENV VARIABLES HERE FOR AUTH-SERVICE TASKLY ------------------"
 # export REQUIRE_DB_INSERT=True 
 # export REQUIRE_DB_MIGRATIONS=True
