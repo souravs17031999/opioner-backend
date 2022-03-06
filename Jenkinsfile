@@ -32,7 +32,9 @@ pipeline {
         }
         stage ('test') {
             steps {
-                sh 'make test'
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh 'make test'
+                }
             }
         }
         stage ('publish') {
@@ -40,11 +42,16 @@ pipeline {
                 sh 'make publish'
             }
         }
+        stage ('clean') {
+            steps {
+                sh 'make clean'
+            }
+        }
     }
     post {
         always {
             echo "---------------------- FINAL STEP OF JENKINS RUNS ALWAYS ----------------------"
-            sh 'make clean'
+            // sh "sudo chown root:souravcovenant /run/docker.sock"
         }
     }
 }
