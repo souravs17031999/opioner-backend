@@ -39,7 +39,9 @@ pipeline {
         }
         stage ('publish') {
             steps {
-                sh 'make publish'
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh 'make publish'
+                }
             }
         }
         stage ('clean') {
