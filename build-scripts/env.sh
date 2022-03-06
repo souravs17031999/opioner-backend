@@ -14,5 +14,7 @@ else
    export TAGNAME="$CURRENT_TAG-jenkins-dev-$BUILD_NUMBER" 
 fi
 echo "Got tag: $TAGNAME"
+
+export apitest="-f test/docker-compose.yml"
 export BUILD_COMPOSE_LIST="-f $TOPDIR/docker-compose.yml"
-export TEST_COMPOSE_LIST="-f $TOPDIR/docker-compose.yml -f test/docker-compose.yml"
+export TEST_COMPOSE_LIST="-f $TOPDIR/docker-compose.yml ${apitest}"
