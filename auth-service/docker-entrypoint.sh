@@ -1,13 +1,13 @@
 #!/usr/bin/env sh
+set -ex 
 
-source $WORKSPACE/build-scripts/env.sh
 export FLASK_APP=app.py
 export FLASK_ENV=development 
 export PYTHONUNBUFFERED="true"
 
-source env.sh
+source /app/env.sh
 
-source wait-for-db-server.sh 
+source /app/wait-for-db-server.sh 
 
 if [[ "$REQUIRE_DB_MIGRATIONS" == "True" ]]; then 
     python3 migrations.py
