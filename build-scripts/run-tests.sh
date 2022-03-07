@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 source $WORKSPACE/build-scripts/env.sh
 

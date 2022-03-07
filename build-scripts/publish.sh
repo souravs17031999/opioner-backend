@@ -1,7 +1,7 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 source $WORKSPACE/build-scripts/env.sh
 
 echo "----- SENDING NOTIFICATION TO SLACK "
 
-PY build-scripts/publish.py
+python3 build-scripts/publish.py
