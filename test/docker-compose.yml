@@ -2,7 +2,7 @@ version: "3.9"
 services:
   apitest:
     build:
-      context: .
+      context: ${TOPDIR}/test
       dockerfile: Dockerfile
     depends_on:
       - postgres
