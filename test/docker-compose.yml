@@ -16,7 +16,7 @@ services:
       - product_service
       - notification_service
     environment:
-      - AUTHSERVICEHOST
-      - USERSERVICEHOST
-      - PRODUCTSERVICEHOST
-      - NOTIFICATIONSERVICEHOST
+      - AUTHSERVICEHOST=http://auth_service:8081/auth
+      - USERSERVICEHOST=http://user_service:8082/user
+      - PRODUCTSERVICEHOST=http://product_service:8083/product
+      - NOTIFICATIONSERVICEHOST=http://notification_service:8084/notification

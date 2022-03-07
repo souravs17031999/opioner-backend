@@ -13,10 +13,6 @@ pipeline {
         POSTGRES_DB = credentials('POSTGRES_DB')
         POSTGRES_USER = credentials('POSTGRES_USER')
         ALLOWED_ORIGIN_HOST_PROD = credentials('ALLOWED_ORIGIN_HOST_PROD')
-        AUTHSERVICEHOST = credentials('AUTHSERVICEHOST')
-        USERSERVICEHOST = credentials('USERSERVICEHOST')
-        PRODUCTSERVICEHOST = credentials('PRODUCTSERVICEHOST')
-        NOTIFICATIONSERVICEHOST = credentials('NOTIFICATIONSERVICEHOST')
         dockerHubUsername = credentials('dockerHubUsername')
         dockerHubPassword = credentials('dockerHubPassword')
         BUILD_NUMBER = "${BUILD_NUMBER}"
@@ -26,11 +22,11 @@ pipeline {
     }
 
     stages {
-        stage ('build') {
-            steps {
-                sh 'make build'
-            }
-        }
+        // stage ('build') {
+        //     steps {
+        //         sh 'make build'
+        //     }
+        // }
         stage ('test') {
             steps {
                 sh 'make test'
