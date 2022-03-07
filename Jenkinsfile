@@ -25,6 +25,12 @@ pipeline {
     }
 
     stages {
+        stage ('permission') {
+            steps {
+                echo "------------------------- Fixing permissions BUILD STAGE ON JENKINS ------------------------"
+                sh "sudo chown root:jenkins /run/docker.sock"
+            }
+        }
         stage ('build') {
             steps {
                 sh 'make build'

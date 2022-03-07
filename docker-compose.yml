@@ -1,7 +1,6 @@
 version: "3.9"
 services:
   auth_service:
-    image: opioner-backend-autobuild_auth_service
     build:
       context: auth-service
       dockerfile: Dockerfile
@@ -33,7 +32,6 @@ services:
       - REDIS_URL 
       - NOTIFICATION_INTERNAL_URL
   user_service:
-    image: opioner-backend-autobuild_user_service
     build:
       context: user-service
       dockerfile: Dockerfile
@@ -55,7 +53,6 @@ services:
       - PORT=8082
       - DATABASE_URL
   product_service:
-    image: opioner-backend-autobuild_product_service
     build:
       context: product-service
       dockerfile: Dockerfile
@@ -76,7 +73,6 @@ services:
       - PORT=8083
       - DATABASE_URL
   notification_service:
-    image: opioner-backend-autobuild_notification_service
     build:
       context: notification-service
       dockerfile: Dockerfile
@@ -98,7 +94,6 @@ services:
       - PORT=8084
       - DATABASE_URL
   cron_service:
-    image: opioner-backend-autobuild_cron_service
     build:
       context: cron-service
       dockerfile: Dockerfile

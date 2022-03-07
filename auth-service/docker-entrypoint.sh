@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 export FLASK_APP=app.py
 export FLASK_ENV=development
 export PYTHONUNBUFFERED="true"
-source /app/env.sh
+source env.sh
 source wait-for-db-server.sh
 if [[ "$REQUIRE_DB_MIGRATIONS" == "True" ]]; then
     python3 migrations.py
