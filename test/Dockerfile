@@ -9,6 +9,7 @@ COPY . .
 RUN apk add curl
 
 RUN cd apitest && npm install
+RUN cd postdeploy && npm install
 
 # RUN apk add postgresql-client
 
