@@ -19,6 +19,7 @@ pipeline {
         SLACK_WEBHOOK_URL = credentials('SLACK_WEBHOOK_URL')
         SENDGRID_API_KEY_PROD = credentials('SENDGRID_API_KEY_PROD')
         REDIS_URL = credentials('REDIS_URL')
+        HEROKU_API_KEY = credentials('HEROKU_API_KEY')
     }
 
     stages {
@@ -37,6 +38,11 @@ pipeline {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     sh 'make publish'
                 }
+            }
+        }
+        stage ('Heroku deployment') {
+            steps {
+                sh 'make heroku_deploy'
             }
         }
         stage ('clean') {
