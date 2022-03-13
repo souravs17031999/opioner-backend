@@ -26,34 +26,12 @@ async function setHostForDeployedAppsInContext(herokuGetAppsApi) {
 	});
 }
 
-try {
-    const herokuGetAppsApi = "https://api.heroku.com/apps"
-    const responseApps = await setHostForDeployedAppsInContext(herokuGetAppsApi)
-    console.log(responseApps)
-    const requiredApps = ["auth-service-prd", "cron-worker-prd", "notification-service-prd", "product-service-prd", "user-service-prd01"]
-    const deployedApps = []
-
-    for(let app of responseApps) {
-        if(app.name != undefined) {
-            deployedApps.push(app.name)
-            if(app.name === requiredApps[0]) {
-                authServerUrl = app.web_url
-            } else if(app.name === requiredApps[2]) {
-                notificationServerUrl = app.web_url
-            } else if(app.name === requiredApps[3]) {
-                productServerUrl = app.web_url
-            } else if(app.name === requiredApps[4]) {
-                userServerUrl = app.web_url
-            }
-        }
-    }
-    console.log("========> Searching for required apps: ", requiredApps)
-    console.log("========> Found Heroku deployed apps: ", deployedApps)
-} catch (err) {
-    console.log("[ERROR]: Error in getting host names from Heroku API's")
-    throw new Error("[ERROR][setHostForDeployedAppsInContext]: Error in getting host names from Heroku API's")
-}
 // ---------------------------------------------------------
+const requiredApps = ["auth-service-prd", "cron-worker-prd", "notification-service-prd", "product-service-prd", "user-service-prd01"]
+authServerUrl = "https://" + requiredApps[0] + ".herokuapp.com/auth"
+userServerUrl = "https://" + requiredApps[4] + ".herokuapp.com/user"
+productServerUrl = "https://" + requiredApps[3] + ".herokuapp.com/product"
+notificationServerUrl = "https://" + requiredApps[2] + ".herokuapp.com/notification"
 
 if(authServerUrl === undefined) {
     throw new Error("AUTHSERVICEHOST NOT DEFINED IN ENVIRONMENT")
