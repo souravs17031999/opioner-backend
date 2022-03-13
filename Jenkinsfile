@@ -23,6 +23,9 @@ pipeline {
     }
 
     stages {
+        options {
+            timeout(time: 30, unit: "MINUTES")
+        }
         stage ('build') {
             steps {
                 sh 'make build'
@@ -35,33 +38,16 @@ pipeline {
         }
         stage ('publish') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'make publish'
-                }
+                sh 'make publish'
             }
         }
         stage ('Heroku deployment') {
             steps {
-                timeout(5) {
-                    input {
-                        id: 'userInput'
-                        message "Deploy to Heroku production ?"
-                        ok "Yes"
-                        parameters "userInputValue"
-                    }
+                catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') {
+                    input('Do you want to deploy to Heroku production ?')
+                    sh 'make heroku_deploy'
                 }
-                script {
-                    if (userInputValue == 'Yes') {
-                        sh 'make heroku_deploy'
-                    } else {
-                        echo 'Skipping deployment'
-                    }
-                }
-                
             }
-            
-                    
-            
         }
         stage ('clean') {
             steps {
