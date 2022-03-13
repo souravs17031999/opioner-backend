@@ -22,11 +22,11 @@ pipeline {
     }
 
     stages {
-        // stage ('build') {
-        //     steps {
-        //         sh 'make build'
-        //     }
-        // }
+        stage ('build') {
+            steps {
+                sh 'make build'
+            }
+        }
         stage ('test') {
             steps {
                 sh 'make test'
