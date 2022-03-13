@@ -46,11 +46,9 @@ pipeline {
                 timeout(time: 30, unit: "MINUTES")
             }
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') {
-                    input('Do you want to deploy to Heroku production ?')
-                    sh 'make heroku_deploy'
-                    env.DEPLOYED="TRUE"
-                }
+                input('Do you want to deploy to Heroku production ?')
+                sh 'make heroku_deploy'
+                env.DEPLOYED="TRUE"
             }
         }
         stage ('Post deploy test') {
