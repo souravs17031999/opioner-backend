@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
-source wait-for-db-server.sh
+
+if [ "$TEST_SUITE_DIR" = "apitest" ]; then
+    source wait-for-db-server.sh
+fi
+
 source run-tests.sh

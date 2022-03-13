@@ -9,6 +9,11 @@ test:
 	TEST_SUITE_DIR="apitest" \
 	build-scripts/run-tests.sh  
 
+test_postdeploy:
+	@echo "MAKE test_postdeploy ==========================================="
+	TEST_SUITE_DIR="postdeploy" \
+	build-scripts/run-tests.sh  
+
 publish:
 	@echo "MAKE publish ==========================================="
 	# build-scripts/publish.sh  

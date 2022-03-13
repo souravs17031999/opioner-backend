@@ -49,7 +49,16 @@ pipeline {
                 catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') {
                     input('Do you want to deploy to Heroku production ?')
                     sh 'make heroku_deploy'
+                    env.DEPLOYED="TRUE"
                 }
+            }
+        }
+        stage ('Post deploy test') {
+            steps {
+                when {
+                    environment name: "DEPLOYED", value: "TRUE"
+                }
+                sh 'make test_postdeploy'
             }
         }
         stage ('clean') {

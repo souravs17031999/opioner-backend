@@ -21,3 +21,4 @@ services:
       - PRODUCTSERVICEHOST=http://product_service:8083/product
       - NOTIFICATIONSERVICEHOST=http://notification_service:8084/notification
       - TEST_SUITE_DIR
+      - HEROKU_API_KEY
