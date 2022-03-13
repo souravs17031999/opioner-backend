@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 echo "Starting deployment to Heroku CI/CD....."
 
 echo "Heroku authentication......"
