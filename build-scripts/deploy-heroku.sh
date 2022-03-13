@@ -1,7 +1,7 @@
 echo "Starting deployment to Heroku CI/CD....."
 
 echo "Heroku authentication......"
-export HEROKU_APPS=$(HEROKU_API_KEY=${HEROKU_API_KEY} heroku apps)
+HEROKU_APPS=$(HEROKU_API_KEY="${HEROKU_API_KEY}" heroku apps)
 echo "Heroku container registry login......"
 heroku container:login
 
@@ -15,7 +15,6 @@ if [[ "auth" =~ .*"$HEROKU_APPS".* ]]; then
   cd $TOPDIR/auth-service 
   heroku container:push web -a auth-service-prd
   heroku container:release web -a auth-service-prd
-  
 fi 
 
 if [[ "product" =~ .*"$HEROKU_APPS".* ]]; then
