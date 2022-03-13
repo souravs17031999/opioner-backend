@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 export TIMEOUT=120
-export AUTH_SERVER_URL=http://auth_service:8081/auth/test
+export AUTH_SERVER_URL=http://auth_service:8081/auth/status/live
 
 echo "------------------------- WAITING FOR AUTH-SERVICE SERVER URL: $AUTH_SERVER_URL for $TIMEOUT seconds"
 
