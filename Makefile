@@ -10,11 +10,11 @@ test:
 
 publish:
 	@echo "MAKE publish ==========================================="
-	build-scripts/publish.sh  
+	# build-scripts/publish.sh  
 
 clean:
 	@echo "MAKE clean ===========================================" 
-	build-scripts/clean-dockers.sh 
+	# build-scripts/clean-dockers.sh 
 
 local:
 	@echo "MAKE local ==========================================="
