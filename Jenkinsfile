@@ -48,7 +48,9 @@ pipeline {
             steps {
                 input('Do you want to deploy to Heroku production ?')
                 sh 'make heroku_deploy'
-                env.DEPLOYED="TRUE"
+                script {
+                    env.DEPLOYED="TRUE"
+                }
             }
         }
         stage ('Post deploy test') {
