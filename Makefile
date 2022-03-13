@@ -20,7 +20,7 @@ publish:
 
 clean:
 	@echo "MAKE clean ===========================================" 
-	# build-scripts/clean-dockers.sh 
+	build-scripts/clean-dockers.sh 
 
 heroku_deploy:
 	@echo "MAKE heroku_deploy ===========================================" 
