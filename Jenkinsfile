@@ -41,23 +41,27 @@ pipeline {
             }
         }
         stage ('Heroku deployment') {
-            timeout(5) {
-                input {
-                    id: 'userInput'
-                    message "Deploy to Heroku production ?"
-                    ok "Yes"
-                    parameters "userInputValue"
+            steps {
+                timeout(5) {
+                    input {
+                        id: 'userInput'
+                        message "Deploy to Heroku production ?"
+                        ok "Yes"
+                        parameters "userInputValue"
+                    }
                 }
+                script {
+                    if (userInputValue == 'Yes') {
+                        sh 'make heroku_deploy'
+                    } else {
+                        echo 'Skipping deployment'
+                    }
+                }
+                
             }
-            if (userInputValue == "Yes") {
-                steps {
-                    sh 'make heroku_deploy'
-                }
-            else {
-                steps {
-                    sh 'echo Heroku deployment'
-                }
-            }
+            
+                    
+            
         }
         stage ('clean') {
             steps {
