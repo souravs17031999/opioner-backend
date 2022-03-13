@@ -18,7 +18,7 @@ clean:
 
 heroku_deploy:
 	@echo "MAKE heroku_deploy ===========================================" 
-	# build-scripts/deploy-heroku.sh 
+	build-scripts/deploy-heroku.sh 
 
 local:
 	@echo "MAKE local ==========================================="
