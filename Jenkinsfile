@@ -23,10 +23,10 @@ pipeline {
     }
 
     stages {
-        options {
-            timeout(time: 30, unit: "MINUTES")
-        }
         stage ('build') {
+            options {
+                timeout(time: 30, unit: "MINUTES")
+            }
             steps {
                 sh 'make build'
             }
@@ -42,6 +42,9 @@ pipeline {
             }
         }
         stage ('Heroku deployment') {
+            options {
+                timeout(time: 30, unit: "MINUTES")
+            }
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') {
                     input('Do you want to deploy to Heroku production ?')
@@ -58,7 +61,6 @@ pipeline {
     post {
         always {
             echo "---------------------- FINAL STEP OF JENKINS RUNS ALWAYS ----------------------"
-            // sh "sudo chown root:souravcovenant /run/docker.sock"
         }
     }
 }
