@@ -46,6 +46,7 @@ or
 - FIREBASE_PROFILE_PIC_PATH
 - REDIS_URL
 - NOTIFICATION_INTERNAL_URL
+- HEROKU_API_KEY
 
 ### Microservices:
 
@@ -62,6 +63,7 @@ or
 - Deployment pipeline follows the deployment via Heroku CI/CD docker container registries to deliver the end product.
 - Tests are integrated in the pipeline (preferably Jenkins pipeline) before and after the delivery of end product to make sure we deliver the value of the product without
 breaking existing functionality.
+- Run `make heroku_deploy` to deploy to Heroku cluster.
 
 ## Useful: 
 - Each service is built independently using it's own Dockerfile and pushed to Heroku container registeries.
@@ -135,4 +137,8 @@ Security
 -> passwords should be secure enough    
 -> after logout, session should be cleared and no one should be able to see other user’s data after session is over.    
 
-UI/UX feel - seamless experience right from login form to actual task dashboard.     
+UI/UX feel - seamless experience right from login form to actual task dashboard.    
+
+
+**Whats coming up ?**
+_Delpoyment strategy via Terraform and Kubernetes soon coming up._
