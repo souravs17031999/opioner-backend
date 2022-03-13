@@ -6,6 +6,7 @@ build:
 
 test:
 	@echo "MAKE test ==========================================="
+	TEST_SUITE_DIR="apitest" \
 	build-scripts/run-tests.sh  
 
 publish:

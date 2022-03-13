@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 
-cd apitest 
+cd ${TEST_SUITE_DIR} 
 npm test
 # exit 1
