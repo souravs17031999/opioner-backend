@@ -136,10 +136,12 @@ def verify_otp_for_user(userData, otp):
         return False
 
 
-@auth.route("/test", methods=["GET", "POST"])
-def test_auth_service():
-    return "<h1> This is auth service testing, service is up and running !</h1>"
-
+@auth.route("/status/live", methods=["GET", "POST"])
+def health_check_auth_service():
+    return jsonify({
+        "status" : "success", 
+        "message": "This is auth-service testing, service is up and running !"
+        }), 200
 
 @auth.route("/login-user", methods=["POST"])
 def login_to_app():

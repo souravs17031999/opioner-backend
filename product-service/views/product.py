@@ -28,10 +28,12 @@ if os.getenv("DATABASE_URL") != "":
 conn = psycopg2.connect(DATABASE_URL)
 
 
-@product.route("/test", methods=["GET", "POST"])
-def test_auth_service():
-    return "<h1> This is product service testing, service is up and running !</h1>"
-
+@product.route("/status/live", methods=["GET", "POST"])
+def health_check_product_service():
+    return jsonify({
+        "status" : "success", 
+        "message": "This is product-service testing, service is up and running !"
+        }), 200
 
 def authorize(f):
     @wraps(f)

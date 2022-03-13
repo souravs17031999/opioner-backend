@@ -128,10 +128,12 @@ def authorize(f):
     return decorated_function
 
 
-@user.route("/test", methods=["GET", "POST"])
-def test_user_service():
-    return "<h1> This is user service testing, service is up and running !</h1>"
-
+@user.route("/status/live", methods=["GET", "POST"])
+def health_check_user_service():
+    return jsonify({
+        "status" : "success", 
+        "message": "This is user-service testing, service is up and running !"
+        }), 200
 
 @user.route("/fetch-users", methods=["GET"])
 def get_all_current_users():

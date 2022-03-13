@@ -148,10 +148,12 @@ def send_sendgrid_mail(emailData, template_name):
     }
 
 
-@notification.route("/test", methods=["GET", "POST"])
-def test_notification_service():
-    return "<h1> This is notification service testing, service is up and running !</h1>"
-
+@notification.route("/status/live", methods=["GET", "POST"])
+def health_check_notification_service():
+    return jsonify({
+        "status" : "success", 
+        "message": "This is notification-service testing, service is up and running !"
+        }), 200
 
 # only for Internal usage
 @notification.route("/send/email", methods=["POST"])
