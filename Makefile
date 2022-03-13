@@ -12,7 +12,7 @@ test:
 test_postdeploy:
 	@echo "MAKE test_postdeploy ==========================================="
 	TEST_SUITE_DIR="postdeploy" \
-	build-scripts/run-tests.sh  
+	build-scripts/post-deploy-test.sh  
 
 publish:
 	@echo "MAKE publish ==========================================="

@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  apitest:
+    build:
+      context: ${TOPDIR}/test
+      dockerfile: Dockerfile
+    environment:
+      - TEST_SUITE_DIR
+      - HEROKU_API_KEY
