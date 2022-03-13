@@ -20,3 +20,4 @@ services:
       - USERSERVICEHOST=http://user_service:8082/user
       - PRODUCTSERVICEHOST=http://product_service:8083/product
       - NOTIFICATIONSERVICEHOST=http://notification_service:8084/notification
+      - TEST_SUITE_DIR
