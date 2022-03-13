@@ -7,7 +7,7 @@ let notificationApi = config.notificationApi
 describe('/auth services api', function() {
 
     it('should get 200 for checking the auth service status', function(done) {
-        authApi.get(`/test`)
+        authApi.get(`/status/live`)
         .expect(200)
         .end(function(err, res) {
             if(err) {
@@ -22,7 +22,7 @@ describe('/auth services api', function() {
 describe('/user services api', function() {
 
     it('should get 200 for checking the user service status', function(done) {
-        userApi.get(`/test`)
+        userApi.get(`/status/live`)
         .expect(200)
         .end(function(err, res) {
             if(err) {
@@ -37,7 +37,7 @@ describe('/user services api', function() {
 describe('/product services api', function() {
 
     it('should get 200 for checking the product service status', function(done) {
-        productApi.get(`/test`)
+        productApi.get(`/status/live`)
         .expect(200)
         .end(function(err, res) {
             if(err) {
@@ -52,7 +52,7 @@ describe('/product services api', function() {
 describe('/notification services api', function() {
 
     it('should get 200 for checking the notification service status', function(done) {
-        notificationApi.get(`/test`)
+        notificationApi.get(`/status/live`)
         .expect(200)
         .end(function(err, res) {
             if(err) {
