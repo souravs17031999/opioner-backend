@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM souravkumardevadmin/baseos-python_baseos_python:0.0.0
+FROM souravkumardevadmin/baseos-python_baseos_python:1.0.0
 
 WORKDIR /app
 
