@@ -14,7 +14,20 @@ Frontend of [Opioner app](https://github.com/souravs17031999/opioner-home) is se
 - Start docker service if not started already on your system (Install docker from [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04) and docker-compose from [here](https://www.digitalocean.com/community/tutorials/how-to-install-docker-compose-on-ubuntu-18-04))           
 - Run all services with docker-compose from cloned project root directory         
   `docker-compose up --build`      
-- Your services should be up and running.      
+- Your services should be up and running.  
+
+or 
+
+- Run `make local`
+
+## Test the project locally:
+
+- Run `make test`
+
+## Test the deployed project:
+
+- Run `make test_postdeploy` 
+(useful in CI/CD pipelines)
 
 ### ENV VARIABLES FOR RUNNING (before starting the service):
 
@@ -33,6 +46,7 @@ Frontend of [Opioner app](https://github.com/souravs17031999/opioner-home) is se
 - FIREBASE_PROFILE_PIC_PATH
 - REDIS_URL
 - NOTIFICATION_INTERNAL_URL
+- HEROKU_API_KEY
 
 ### Microservices:
 
@@ -43,6 +57,13 @@ Frontend of [Opioner app](https://github.com/souravs17031999/opioner-home) is se
 - [Cron-service](https://github.com/souravs17031999/opioner-backend/tree/master/cron-service)
 - Postgres
 - Redis
+
+### Deployment via CI/CD:
+
+- Deployment pipeline follows the deployment via Heroku CI/CD docker container registries to deliver the end product.
+- Tests are integrated in the pipeline (preferably Jenkins pipeline) before and after the delivery of end product to make sure we deliver the value of the product without
+breaking existing functionality.
+- Run `make heroku_deploy` to deploy to Heroku cluster.
 
 ## Useful: 
 - Each service is built independently using it's own Dockerfile and pushed to Heroku container registeries.
@@ -116,4 +137,8 @@ Security
 -> passwords should be secure enough    
 -> after logout, session should be cleared and no one should be able to see other user’s data after session is over.    
 
-UI/UX feel - seamless experience right from login form to actual task dashboard.     
+UI/UX feel - seamless experience right from login form to actual task dashboard.    
+
+
+**Whats coming up ?**
+_Delpoyment strategy via Terraform and Kubernetes soon coming up._
