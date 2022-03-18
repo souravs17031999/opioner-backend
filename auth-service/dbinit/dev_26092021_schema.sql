@@ -125,6 +125,8 @@ ALTER TABLE public.users OWNER TO postgres;
 --
 -- Name: login_sessions; Type: TABLE; Schema: public; Owner: postgres
 --
+CREATE SEQUENCE IF NOT EXISTS public.login_sessions_user_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+
 CREATE TABLE IF NOT EXISTS public.login_sessions (
     user_id integer DEFAULT nextval('public.login_sessions_user_id_seq'::regclass) NOT NULL,
     origin text,
@@ -137,7 +139,6 @@ CREATE TABLE IF NOT EXISTS public.login_sessions (
 --
 -- Name: login_sessions_user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
-CREATE SEQUENCE IF NOT EXISTS public.login_sessions_user_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 ---
 ALTER TABLE public.login_sessions_user_id_seq OWNER TO postgres;
 ---

@@ -14,6 +14,7 @@ import secrets
 import string
 import requests
 import json
+import subprocess
 
 app = Flask(__name__)
 
@@ -137,10 +138,56 @@ def verify_otp_for_user(userData, otp):
 
 
 @auth.route("/status/live", methods=["GET", "POST"])
-def health_check_auth_service():
+def liveness_check_auth_service():
     return jsonify({
         "status" : "success", 
-        "message": "This is auth-service testing, service is up and running !"
+        "message": "This is auth-service liveness probe, service is up and running !"
+        }), 200
+
+@auth.route("/status/health", methods=["GET", "POST"])
+def health_check_auth_service():
+
+    POSTGRES_SUCCESS, APP_SUCCESS, REDIS_SUCCESS, NOTIFICATION_SERVICE_SUCCESS = True, True, True, True
+    components_check = [
+        {"postgresDB": POSTGRES_SUCCESS},
+        {"application": APP_SUCCESS}, 
+        {"redis": REDIS_SUCCESS}, 
+        {"notification_service": NOTIFICATION_SERVICE_SUCCESS}
+    ]
+    try:
+        subprocess_output = subprocess.run(["pg_isready", "-h", f"{os.getenv('PGHOST')}"])
+        if subprocess_output.returncode != 0:
+            POSTGRES_SUCCESS = False
+    except Exception as e:
+        print(e)
+    
+    try:
+        if redisServer.ping() != True:
+            REDIS_SUCCESS = False
+    except Exception as e:
+        print(e)
+
+    headers = {"Content-Type": "application/json"}
+    try:
+        print(
+            "[debug] Requesting to Notification service API: ",
+            NOTIFICATION_INTERNAL_API + "/notification/status/live",
+        )
+        notifyResponse = requests.get(
+            NOTIFICATION_INTERNAL_API + "/notification/status/live",
+            headers=headers,
+            timeout=10,
+        )
+        print("[debug] notification-service status: ", notifyResponse)
+        print("[debug] notification-service response: ", notifyResponse.text)
+        if notifyResponse.status_code != 200:
+            NOTIFICATION_SERVICE_SUCCESS = False 
+    except Exception as e:
+        print(e)
+
+    return jsonify({
+        "status" : "success", 
+        "component_status": components_check
         }), 200
 
 @auth.route("/login-user", methods=["POST"])

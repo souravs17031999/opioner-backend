@@ -10,6 +10,8 @@ from sendgrid.helpers.mail import Mail
 import jinja2
 import os
 import psycopg2
+import subprocess
+import requests
 
 app = Flask(__name__)
 
@@ -29,6 +31,7 @@ if os.getenv("DATABASE_URL") != "":
 
 SENDGRID_API_KEY_PROD = os.getenv("SENDGRID_API_KEY_PROD")
 SENDGRID_SENDER_EMAIL = "opinic.contact@gmail.com"
+SENDGRID_STATUS_API = "https://status.sendgrid.com/api/v2/summary.json"
 
 conn = psycopg2.connect(DATABASE_URL)
 
@@ -149,10 +152,47 @@ def send_sendgrid_mail(emailData, template_name):
 
 
 @notification.route("/status/live", methods=["GET", "POST"])
-def health_check_notification_service():
+def liveness_notification_service():
     return jsonify({
         "status" : "success", 
-        "message": "This is notification-service testing, service is up and running !"
+        "message": "This is notification-service liveness probe, service is up and running !"
+        }), 200
+
+@notification.route("/status/health", methods=["GET", "POST"])
+def health_check_notification_service():
+
+    POSTGRES_SUCCESS, APP_SUCCESS, SENDGRID_SUCCESS = True, True, True
+    components_check = [
+        {"postgresDB": POSTGRES_SUCCESS},
+        {"application": APP_SUCCESS},
+        {"sendgrid": SENDGRID_SUCCESS}
+    ]
+    try:
+        subprocess_output = subprocess.run(["pg_isready", "-h", f"{os.getenv('PGHOST')}"])
+        if subprocess_output.returncode != 0:
+            POSTGRES_SUCCESS = False
+    except Exception as e:
+        print(e)
+
+    try:
+        print(
+            "[debug] Requesting to SendGrid: ",
+            SENDGRID_STATUS_API,
+        )
+        sendgridResponse = requests.get(
+            SENDGRID_STATUS_API,
+            timeout=10,
+        )
+        print("[debug] sendgrid-service status: ", sendgridResponse)
+        print("[debug] sendgrid-service response: ", sendgridResponse.text)
+        if sendgridResponse.status_code != 200 or (sendgridResponse.components[0].name == "Mail Sending" and sendgridResponse.components[0].status != "operational"):
+            SENDGRID_SUCCESS = False 
+    except Exception as e:
+        print(e)
+
+    return jsonify({
+        "status" : "success", 
+        "component_status": components_check
         }), 200
 
 # only for Internal usage

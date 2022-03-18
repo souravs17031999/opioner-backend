@@ -8,7 +8,7 @@ from functools import wraps
 import os
 import psycopg2
 import requests
-
+import subprocess
 
 app = Flask(__name__)
 
@@ -29,10 +29,31 @@ conn = psycopg2.connect(DATABASE_URL)
 
 
 @product.route("/status/live", methods=["GET", "POST"])
-def health_check_product_service():
+def liveness_product_service():
     return jsonify({
         "status" : "success", 
-        "message": "This is product-service testing, service is up and running !"
+        "message": "This is product-service liveness probe, service is up and running !"
+        }), 200
+
+@product.route("/status/health", methods=["GET", "POST"])
+def health_check_product_service():
+
+    POSTGRES_SUCCESS, APP_SUCCESS = True, True
+    components_check = [
+        {"postgresDB": POSTGRES_SUCCESS},
+        {"application": APP_SUCCESS}
+    ]
+
+    try:
+        subprocess_output = subprocess.run(["pg_isready", "-h", f"{os.getenv('PGHOST')}"])
+        if subprocess_output.returncode != 0:
+            POSTGRES_SUCCESS = False
+    except Exception as e:
+        print(e)
+
+    return jsonify({
+        "status" : "success", 
+        "component_status": components_check
         }), 200
 
 def authorize(f):
