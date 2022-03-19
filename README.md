@@ -65,6 +65,11 @@ or
 breaking existing functionality.
 - Run `make heroku_deploy` to deploy to Heroku cluster.
 
+### New Relic Monitoring
+- We already have integrated new relic monitoring dashboards but configuration file `newrelic.ini` will have to be provided (inserted at each service root dir) 
+  and set `APM_MONITORING_NEWRELIC` to "True" to start application service with monitoring enabled.
+  (for security reasons, configuration file will not be commited to this repo)
+
 ## Useful: 
 - Each service is built independently using it's own Dockerfile and pushed to Heroku container registeries.
 - Then, the container is released into production.
