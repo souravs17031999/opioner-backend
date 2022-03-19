@@ -99,6 +99,8 @@ _Rest API's have been designed using best practices which conveys the exact purp
 
 _`Build-scripts` contains the useful scripts to be run on Jenkins CI/CD pipeline_
 
+_`Hot reloading`: enabled for all services, server is reloaded as soon as code change is detected in development_
+
 ### SRS -    
 #### 1.0 Introduction   
 This document aims to describe and document the software requirements specification for our product - Taskly.          
@@ -156,6 +158,8 @@ Security
 
 UI/UX feel - seamless experience right from login form to actual task dashboard.    
 
+### GDPR compliance:
+- All the data processed for user is transparent and is explained on terms and privacy policy page of (Opioner-home website)[https://souravs17031999.github.io/opioner-home]
 
 **Whats coming up ?**
 _Delpoyment strategy via Terraform and Kubernetes soon coming up._
