@@ -69,6 +69,10 @@ breaking existing functionality.
 - We already have integrated new relic monitoring dashboards but configuration file `newrelic.ini` will have to be provided (inserted at each service root dir) 
   and set `APM_MONITORING_NEWRELIC` to "True" to start application service with monitoring enabled.
   (for security reasons, configuration file will not be commited to this repo)
+  
+### Token based authentication
+- All authorized routes are protected with JWT based token authentication which is expected by client to send in `Authorization` headers containing claims such as `user-id` and `roles` which can be fetched by first authorized login response token.
+ It requires `SECRET_KEY` (random hard password string) for authentication to work properly. 
 
 ## Useful: 
 - Each service is built independently using it's own Dockerfile and pushed to Heroku container registeries.
