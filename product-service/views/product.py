@@ -17,7 +17,7 @@ app = Flask(__name__)
 # app.config['MYSQL_DATABASE_PASSWORD'] = os.getenv('MYSQL_DATABASE_PASSWORD')
 # app.config['MYSQL_DATABASE_DB'] = os.getenv('MYSQL_DATABASE_DB')
 # app.config['MYSQL_DATABASE_HOST'] = os.getenv('MYSQL_DATABASE_HOST')
-# app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 # mysql.init_app(app)
 
@@ -27,6 +27,19 @@ if os.getenv("DATABASE_URL") != "":
     DATABASE_URL = os.getenv("DATABASE_URL")
 conn = psycopg2.connect(DATABASE_URL)
 
+def decode_auth_token(auth_token):
+    """
+    Decodes the auth token
+    :param auth_token:
+    :return: integer|string
+    """
+    try:
+        payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'), algorithms='HS256')
+        return payload['sub']
+    except jwt.ExpiredSignatureError:
+        return 'Signature expired. Please log in again.'
+    except jwt.InvalidTokenError:
+        return 'Invalid token. Please log in again.'
 
 @product.route("/status/live", methods=["GET", "POST"])
 def liveness_product_service():
@@ -61,12 +74,36 @@ def authorize(f):
     def decorated_function(*args, **kws):
 
         cursor = conn.cursor()
-
+        authToken = ""
         request_user_id = -1
-        if request.method == "GET":
-            request_user_id = request.args.get("user_id")
-        else:
-            request_user_id = request.get_json(force=True).get("user_id")
+
+        try:
+            if 'Authorization' in request.headers:
+                print("[debug]: Got token, Decoding JWT token.... ", request.headers['Authorization'])
+                split_token = request.headers['Authorization'].split(" ")
+                if split_token[0] == "Bearer":
+                    authToken = decode_auth_token(split_token[1])
+                else:
+                    print("[Error]: Token not in valid format")
+                print("[debug]: decode token=> ", authToken)
+                request_user_id = authToken["user-id"]
+        except Exception as e:
+            print(e)
+            return (
+                jsonify(
+                    {
+                        "status": "failure",
+                        "message": "Unauthorized request !, Token is Expired or Invalid !",
+                    }
+                ),
+                401,
+            )
+        
+        if request_user_id == -1:
+            if request.method == "GET":
+                request_user_id = request.args.get("user_id")
+            else:
+                request_user_id = request.get_json(force=True).get("user_id")
 
         print("Authorization for user_id: ", request_user_id)
         authorizeUserQuery = "SELECT u.* FROM users u WHERE u.user_id = %s"
@@ -114,7 +151,7 @@ def authorize(f):
     return decorated_function
 
 
-@product.route("/fetch-list", methods=["GET"])
+@product.route("/my/feed", methods=["GET"])
 @authorize
 def fetch_user_list(loggedInUser):
 
@@ -172,7 +209,7 @@ def fetch_user_list(loggedInUser):
         return jsonify(response), 200
 
 
-@product.route("/fetch-feeds", methods=["GET"])
+@product.route("/public/feeds", methods=["GET"])
 @authorize
 def fetch_feed_for_user(loggedInUser):
 
@@ -321,8 +358,9 @@ def fetch_feed_for_user(loggedInUser):
         return jsonify(response), 200
 
 
-@product.route("/upsert-task", methods=["POST"])
-def submit_or_update_user_task():
+@product.route("/feed/upsert", methods=["POST"])
+@authorize
+def submit_or_update_user_task(loggedInUserId):
 
     post_request = request.get_json(force=True)
 
@@ -383,13 +421,13 @@ def submit_or_update_user_task():
 
         if affected_count == 0:
             response["status"] = "failure"
-            response["message"] = "Task insertion for user failed !"
+            response["message"] = "Feed insertion for user failed !"
             return jsonify(response), 500
         else:
             if db_data is not None:
                 response["id"] = db_data[0]
             response["status"] = "success"
-            response["message"] = "INSERTION for User tasks SUCCESFULLY DONE !"
+            response["message"] = "INSERTION for User feed SUCCESFULLY DONE !"
             return jsonify(response), 200
 
     else:
@@ -421,17 +459,17 @@ def submit_or_update_user_task():
 
         if affected_count == 0:
             response["status"] = "failure"
-            response["message"] = "Task Updation for user failed !"
+            response["message"] = "Feed Updation for user failed !"
             return jsonify(response), 500
         else:
             response["status"] = "success"
-            response["message"] = "Updation for User tasks SUCCESFULLY DONE !"
+            response["message"] = "Updation for User Feed SUCCESFULLY DONE !"
             return jsonify(response), 200
 
     print("----------------------------------------------------")
 
 
-@product.route("/delete-task", methods=["POST"])
+@product.route("/my/feed", methods=["DELETE"])
 def delete_user_list_item():
 
     post_request = request.get_json(force=True)
@@ -496,7 +534,7 @@ def delete_user_list_item():
         return jsonify(response), 200
 
 
-@product.route("/update-feedtask-status", methods=["POST"])
+@product.route("/feed/status", methods=["PUT"])
 def update_user_task_status():
 
     post_request = request.get_json(force=True)

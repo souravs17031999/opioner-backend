@@ -32,6 +32,9 @@ services:
       - REDIS_URL 
       - NOTIFICATION_INTERNAL_URL
       - APM_MONITORING_NEWRELIC
+      - SECRET_KEY
+    volumes:
+      - ./auth-service:/app
   user_service:
     build:
       context: user-service
@@ -54,6 +57,9 @@ services:
       - PORT=8082
       - DATABASE_URL
       - APM_MONITORING_NEWRELIC
+      - SECRET_KEY
+    volumes:
+      - ./user-service:/app
   product_service:
     build:
       context: product-service
@@ -75,6 +81,9 @@ services:
       - PORT=8083
       - DATABASE_URL
       - APM_MONITORING_NEWRELIC
+      - SECRET_KEY
+    volumes:
+      - ./product-service:/app
   notification_service:
     build:
       context: notification-service
@@ -97,6 +106,9 @@ services:
       - PORT=8084
       - DATABASE_URL
       - APM_MONITORING_NEWRELIC
+      - SECRET_KEY
+    volumes:
+      - ./notification-service:/app
   cron_service:
     build:
       context: cron-service
@@ -119,6 +131,9 @@ services:
       - PORT=8085
       - DATABASE_URL
       - APM_MONITORING_NEWRELIC
+      - SECRET_KEY
+    volumes:
+      - ./cron-service:/app
   postgres:
     image: postgres:13
     restart: always

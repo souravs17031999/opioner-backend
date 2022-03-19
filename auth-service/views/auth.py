@@ -23,8 +23,7 @@ app = Flask(__name__)
 # app.config['MYSQL_DATABASE_PASSWORD'] = os.getenv('MYSQL_DATABASE_PASSWORD')
 # app.config['MYSQL_DATABASE_DB'] = os.getenv('MYSQL_DATABASE_DB')
 # app.config['MYSQL_DATABASE_HOST'] = os.getenv('MYSQL_DATABASE_HOST')
-# app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 # mysql.init_app(app)
 
@@ -48,6 +47,39 @@ NOTIFICATION_INTERNAL_API = os.getenv("NOTIFICATION_INTERNAL_URL")
 REDIS_CACHE_TIMEOUT = 60
 OTP_DIGITS = 6
 
+def encode_auth_token(user_id):
+    """
+    Generates the Auth Token
+    :return: string
+    """
+    try:
+        payload = {
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=1800),
+            'iat': datetime.datetime.utcnow(),
+            'sub': {"user-id": user_id, "roles": ["admin"]}
+        }
+        return jwt.encode(
+            payload,
+            app.config.get('SECRET_KEY'),
+            algorithm='HS256'
+        )
+    except Exception as e:
+        return e
+
+
+def decode_auth_token(auth_token):
+    """
+    Decodes the auth token
+    :param auth_token:
+    :return: integer|string
+    """
+    try:
+        payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'))
+        return payload['sub']
+    except jwt.ExpiredSignatureError:
+        return 'Signature expired. Please log in again.'
+    except jwt.InvalidTokenError:
+        return 'Invalid token. Please log in again.'
 
 def get_password_hash(password):
     salt = bcrypt.gensalt()
@@ -256,10 +288,13 @@ def login_to_app():
             finally:
                 cursor.close()
 
+            print("************ JWT TOKEN APPENDING ********* ")
+            userJwtToken = encode_auth_token(loggedInUserId)
             user_data = {
                 "user_id": db_data[0],
                 "username": db_data[1],
                 "firstname": db_data[4],
+                "token": userJwtToken
             }
             response["user_data"] = user_data
             response["status"] = "success"

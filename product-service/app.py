@@ -15,6 +15,9 @@ def before_request_func():
     print("\n***********************************************")
     print("REQUEST METHOD: ", request.method)
     print("REQUEST HEADERS: ", request.headers)
+    if 'Authorization' in request.headers:
+        print("Authorized token found in request: ", request.headers['Authorization'])
+        
     if request.method == "GET":
         print("REQUEST PARAMS: ", request.args)
     elif request.method == "POST":
