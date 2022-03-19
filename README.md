@@ -97,6 +97,8 @@ breaking existing functionality.
 
 _Rest API's have been designed using best practices which conveys the exact purpose of what each API does_
 
+_`Build-scripts` contains the useful scripts to be run on Jenkins CI/CD pipeline_
+
 ### SRS -    
 #### 1.0 Introduction   
 This document aims to describe and document the software requirements specification for our product - Taskly.          
