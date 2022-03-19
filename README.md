@@ -111,7 +111,9 @@ We are going to create our value for the customer by making sure that user is no
 
 We need to get as real time as possible to give the user feel that we are in the user tasks together and helping it in the best way possible, at the same time not  pressurizing the user to complete the task by forcing and notifying all times at worst.     
 
-We need to make our user feel special by making customized boards for keeping tracks of their tasks and give them options to get their notifications / reminders on whatever medium they like and at intervals they like. It will all be about customer centric and giving value to each customer by respecting their privacy and space and keeping their data secured and show whatever user wants to see according to their needs.    
+We need to make our user feel special by making customized boards for keeping tracks of their tasks and give them options to get their notifications / reminders on whatever medium they like and at intervals they like. It will all be about customer centric and giving value to each customer by respecting their privacy and space and keeping their data secured and show whatever user wants to see according to their needs.  
+
+_Rest API's have been designed using best practices which conveys the exact purpose of what each API does_
 
 #### 2.0 Overall description 
 #### 2.1 Functional Requirements Specification    
