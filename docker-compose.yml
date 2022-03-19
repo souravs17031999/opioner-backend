@@ -31,6 +31,7 @@ services:
       - REDIS_PORT 
       - REDIS_URL 
       - NOTIFICATION_INTERNAL_URL
+      - APM_MONITORING_NEWRELIC
   user_service:
     build:
       context: user-service
@@ -52,6 +53,7 @@ services:
       - FIREBASE_PROFILE_PIC_PATH
       - PORT=8082
       - DATABASE_URL
+      - APM_MONITORING_NEWRELIC
   product_service:
     build:
       context: product-service
@@ -72,6 +74,7 @@ services:
       - TEST_JENKINS_BUILD
       - PORT=8083
       - DATABASE_URL
+      - APM_MONITORING_NEWRELIC
   notification_service:
     build:
       context: notification-service
@@ -93,6 +96,7 @@ services:
       - SENDGRID_API_KEY_PROD
       - PORT=8084
       - DATABASE_URL
+      - APM_MONITORING_NEWRELIC
   cron_service:
     build:
       context: cron-service
@@ -114,6 +118,7 @@ services:
       - SENDGRID_API_KEY_PROD
       - PORT=8085
       - DATABASE_URL
+      - APM_MONITORING_NEWRELIC
   postgres:
     image: postgres:13
     restart: always

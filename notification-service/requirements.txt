@@ -1,3 +1,4 @@
 PyJWT==2.1.0
 sendgrid==6.8.3
 requests==2.26.0
+newrelic==7.6.0.173

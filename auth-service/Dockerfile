@@ -18,5 +18,6 @@ ENV ALLOWED_ORIGIN_HOST_PROD=*
 ENV DATABASE_URL=postgres
 ENV REDIS_URL=redis  
 ENV NOTIFICATION_INTERNAL_URL=http://notification_service:8084
+ENV APM_MONITORING_NEWRELIC=False
 
 ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]

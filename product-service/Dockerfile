@@ -16,5 +16,6 @@ ENV PGPASSWORD=postgres
 ENV PGDATABASE=postgres 
 ENV ALLOWED_ORIGIN_HOST_PROD=*
 ENV DATABASE_URL=postgres
+ENV APM_MONITORING_NEWRELIC=False
 
 ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]
