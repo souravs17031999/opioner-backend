@@ -43,6 +43,6 @@ fi
 if [[ "$HEROKU_APPS" =~ .*"cron-worker-prd".* ]]; then
   echo "deploying opioner cron service to production ...."
   cd $TOPDIR/cron-service
-  heroku container:push web -a cron-worker-prd
-  heroku container:release web -a cron-worker-prd
+  heroku container:push worker -a cron-worker-prd
+  heroku container:release worker -a cron-worker-prd
 fi 
