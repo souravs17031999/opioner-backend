@@ -83,6 +83,9 @@ breaking existing functionality.
 - Currently, I have explored and made available instances of [Heroku postgresDB](https://devcenter.heroku.com/articles/heroku-postgresql) and [Amazon RDS postgresDB](https://aws.amazon.com/rds/postgresql/) in production. 
 - For developmental debugging, volumes persistence (bind mounts/named volumes) is included in docker-compose.yml (using docker-compose)  
 
+### Firebase storage 
+- Firebase is used for storage of profile pictures.
+
 ## Useful: 
 - Each service is built independently using it's own Dockerfile and pushed to Heroku container registeries.
 - Then, the container is released into production.
