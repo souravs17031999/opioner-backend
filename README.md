@@ -47,6 +47,7 @@ or
 - REDIS_URL
 - NOTIFICATION_INTERNAL_URL
 - HEROKU_API_KEY
+- SECRET_KEY
 
 ### Microservices:
 
