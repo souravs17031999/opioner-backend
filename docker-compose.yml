@@ -58,6 +58,7 @@ services:
       - DATABASE_URL
       - APM_MONITORING_NEWRELIC
       - SECRET_KEY
+      - FIREBASE_SECRET_CONFIG
     volumes:
       - ./user-service:/app
   product_service:

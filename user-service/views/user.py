@@ -10,6 +10,7 @@ import uuid
 import pyrebase
 import psycopg2
 import subprocess
+import json
 
 app = Flask(__name__)
 
@@ -29,21 +30,14 @@ if os.getenv("DATABASE_URL") != "":
     DATABASE_URL = os.getenv("DATABASE_URL")
 conn = psycopg2.connect(DATABASE_URL)
 
-firebaseConfig = {
-    "apiKey": "AIzaSyBL6NJtZjwP2XztD-Hz2I9GQoeYXCu6lWU",
-    "authDomain": "todo-customized-list.firebaseapp.com",
-    "projectId": "todo-customized-list",
-    "storageBucket": "todo-customized-list.appspot.com",
-    "messagingSenderId": "318415610285",
-    "appId": "1:318415610285:web:86b7214fc51d13be9c4124",
-    "measurementId": "G-3B3EKNCNJ6",
-    "databaseURL": "",
-}
-
+firebaseConfig = json.loads(os.getenv("FIREBASE_SECRET_CONFIG"))
 FIREBASE_PROFILE_PIC_PATH = os.getenv("FIREBASE_PROFILE_PIC_PATH")
 
 firebase = pyrebase.initialize_app(firebaseConfig)
+print("Initializing firebase storage....")
+print(firebase)
 storage = firebase.storage()
+print(storage)
 
 def decode_auth_token(auth_token):
     """
