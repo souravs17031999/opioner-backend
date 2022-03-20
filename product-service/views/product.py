@@ -360,7 +360,7 @@ def fetch_feed_for_user(loggedInUser):
 
 @product.route("/feed/upsert", methods=["POST"])
 @authorize
-def submit_or_update_user_task(loggedInUserId):
+def submit_or_update_user_task(loggedInUser):
 
     post_request = request.get_json(force=True)
 
@@ -740,7 +740,7 @@ def update_user_task_status():
         return jsonify(response), 200
 
 
-@product.route("/upsert-comments", methods=["POST"])
+@product.route("/public/comments", methods=["PUT"])
 def insert_or_update_comments():
 
     post_request = request.get_json(force=True)
@@ -929,7 +929,7 @@ def insert_or_update_comments():
         return jsonify(response), 200
 
 
-@product.route("/delete-comments", methods=["POST"])
+@product.route("/comments", methods=["DELETE"])
 def delete_comments_for_user():
 
     post_request = request.get_json(force=True)
@@ -991,7 +991,7 @@ def delete_comments_for_user():
         return jsonify(response), 200
 
 
-@product.route("/fetch-all-comments", methods=["GET"])
+@product.route("/comments", methods=["GET"])
 def fetch_comments_for_user():
 
     user_id = int(request.args.get("user_id"))

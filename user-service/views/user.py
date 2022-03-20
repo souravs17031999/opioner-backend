@@ -18,7 +18,7 @@ app = Flask(__name__)
 # app.config['MYSQL_DATABASE_PASSWORD'] = os.getenv('MYSQL_DATABASE_PASSWORD')
 # app.config['MYSQL_DATABASE_DB'] = os.getenv('MYSQL_DATABASE_DB')
 # app.config['MYSQL_DATABASE_HOST'] = os.getenv('MYSQL_DATABASE_HOST')
-# app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 # mysql.init_app(app)
 
@@ -45,29 +45,19 @@ FIREBASE_PROFILE_PIC_PATH = os.getenv("FIREBASE_PROFILE_PIC_PATH")
 firebase = pyrebase.initialize_app(firebaseConfig)
 storage = firebase.storage()
 
-
-def token_required(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        token = request.headers.get("access-token")
-        response = {}
-
-        if not token:
-            response["status"] = "failure"
-            response["message"] = "Invalid token !"
-            return jsonify(response), 401
-
-        try:
-            data = jwt.decode(token, app.config["SECRET_KEY"])
-        except:
-            response["status"] = "failure"
-            response["message"] = "User not authorized !"
-            return jsonify(response), 401
-
-        return f(*args, **kwargs)
-
-    return wrapper
-
+def decode_auth_token(auth_token):
+    """
+    Decodes the auth token
+    :param auth_token:
+    :return: integer|string
+    """
+    try:
+        payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'), algorithms='HS256')
+        return payload['sub']
+    except jwt.ExpiredSignatureError:
+        return 'Signature expired. Please log in again.'
+    except jwt.InvalidTokenError:
+        return 'Invalid token. Please log in again.'
 
 def authorize(f):
     @wraps(f)
@@ -76,10 +66,34 @@ def authorize(f):
         cursor = conn.cursor()
 
         request_user_id = -1
-        if request.method == "GET":
-            request_user_id = request.args.get("user_id")
-        else:
-            request_user_id = request.get_json(force=True).get("user_id")
+
+        try:
+            if 'Authorization' in request.headers:
+                print("[debug]: Got token, Decoding JWT token.... ", request.headers['Authorization'])
+                split_token = request.headers['Authorization'].split(" ")
+                if split_token[0] == "Bearer":
+                    authToken = decode_auth_token(split_token[1])
+                else:
+                    print("[Error]: Token not in valid format")
+                print("[debug]: decode token=> ", authToken)
+                request_user_id = authToken["user-id"]
+        except Exception as e:
+            print(e)
+            return (
+                jsonify(
+                    {
+                        "status": "failure",
+                        "message": "Unauthorized request !, Token is Expired or Invalid !",
+                    }
+                ),
+                401,
+            )
+
+        if request_user_id == -1:
+            if request.method == "GET":
+                request_user_id = request.args.get("user_id")
+            else:
+                request_user_id = request.get_json(force=True).get("user_id")
 
         print("Authorization for user_id: ", request_user_id)
         authorizeUserQuery = "SELECT u.* FROM users u WHERE u.user_id = %s"
@@ -157,7 +171,7 @@ def health_check_user_service():
         "component_status": components_check
         }), 200
 
-@user.route("/fetch-users", methods=["GET"])
+@user.route("/users", methods=["GET"])
 def get_all_current_users():
 
     # conn = mysql.connect()
@@ -194,10 +208,11 @@ def get_all_current_users():
     return jsonify(response), 200
 
 
-@user.route("/fetch-user-data", methods=["GET"])
-def fetch_user_data():
+@user.route("/data", methods=["GET"])
+@authorize
+def fetch_user_data(loggedInUser):
 
-    user_id = request.args.get("user_id")
+    user_id = loggedInUser["user_id"]
     # conn = mysql.connect()
     cursor = conn.cursor()
     affected_count = 0
@@ -254,7 +269,7 @@ def fetch_user_data():
         return jsonify(response), 401
 
 
-@user.route("/update-profile-pic", methods=["POST"])
+@user.route("/profile-pic", methods=["PUT"])
 def update_profile_pic_for_user():
 
     if request.files.get("file") is None:
@@ -284,7 +299,7 @@ def update_profile_pic_for_user():
     return jsonify(response), 200
 
 
-@user.route("/fetch/user-status", methods=["POST"])
+@user.route("/status", methods=["POST"])
 def fetch_user_status_auth():
 
     post_request = request.get_json(force=True)

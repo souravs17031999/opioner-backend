@@ -222,7 +222,7 @@ def health_check_auth_service():
         "component_status": components_check
         }), 200
 
-@auth.route("/login-user", methods=["POST"])
+@auth.route("/login/user", methods=["POST"])
 def login_to_app():
     post_request = request.get_json(force=True)
     affected_count = 0
@@ -421,7 +421,7 @@ def signup_to_app(post_request):
         return True, user_data
 
 
-@auth.route("/update-password-user", methods=["POST"])
+@auth.route("/password/user", methods=["PUT"])
 def update_password_user():
     post_request = request.get_json(force=True)
 
@@ -497,7 +497,7 @@ def update_password_user():
         return jsonify(response), 200
 
 
-@auth.route("/logout-user", methods=["POST"])
+@auth.route("/logout/user", methods=["POST"])
 def logout_from_app():
     post_request = request.get_json(force=True)
     affected_count = 0

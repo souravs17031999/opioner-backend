@@ -20,7 +20,7 @@ app = Flask(__name__)
 # app.config['MYSQL_DATABASE_PASSWORD'] = os.getenv('MYSQL_DATABASE_PASSWORD')
 # app.config['MYSQL_DATABASE_DB'] = os.getenv('MYSQL_DATABASE_DB')
 # app.config['MYSQL_DATABASE_HOST'] = os.getenv('MYSQL_DATABASE_HOST')
-# app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 # mysql.init_app(app)
 
@@ -36,16 +36,55 @@ SENDGRID_STATUS_API = "https://status.sendgrid.com/api/v2/summary.json"
 conn = psycopg2.connect(DATABASE_URL)
 
 
+def decode_auth_token(auth_token):
+    """
+    Decodes the auth token
+    :param auth_token:
+    :return: integer|string
+    """
+    try:
+        payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'), algorithms='HS256')
+        return payload['sub']
+    except jwt.ExpiredSignatureError:
+        return 'Signature expired. Please log in again.'
+    except jwt.InvalidTokenError:
+        return 'Invalid token. Please log in again.'
+
 def authorize(f):
     @wraps(f)
     def decorated_function(*args, **kws):
 
         cursor = conn.cursor()
+        
         request_user_id = -1
-        if request.method == "GET":
-            request_user_id = request.args.get("user_id")
-        else:
-            request_user_id = request.get_json(force=True).get("user_id")
+
+        try:
+            if 'Authorization' in request.headers:
+                print("[debug]: Got token, Decoding JWT token.... ", request.headers['Authorization'])
+                split_token = request.headers['Authorization'].split(" ")
+                if split_token[0] == "Bearer":
+                    authToken = decode_auth_token(split_token[1])
+                else:
+                    print("[Error]: Token not in valid format")
+                print("[debug]: decode token=> ", authToken)
+                request_user_id = authToken["user-id"]
+        except Exception as e:
+            print(e)
+            return (
+                jsonify(
+                    {
+                        "status": "failure",
+                        "message": "Unauthorized request !, Token is Expired or Invalid !",
+                    }
+                ),
+                401,
+            )
+
+        if request_user_id == -1:
+            if request.method == "GET":
+                request_user_id = request.args.get("user_id")
+            else:
+                request_user_id = request.get_json(force=True).get("user_id")
 
         print("Authorization for user_id: ", request_user_id)
         authorizeUserQuery = "SELECT u.* FROM users u WHERE u.user_id = %s"
@@ -215,7 +254,7 @@ def send_email_notifications_for_user():
         return jsonify(response), 500
 
 
-@notification.route("/insert-notification", methods=["POST"])
+@notification.route("/me", methods=["POST"])
 def insert_notifications_for_user():
 
     post_request = request.get_json(force=True)
@@ -270,7 +309,7 @@ def insert_notifications_for_user():
         return jsonify(response), 200
 
 
-@notification.route("/fetch-notifications", methods=["GET"])
+@notification.route("/all", methods=["GET"])
 def fetch_notifications_for_user():
 
     user_id = request.args.get("user_id")
@@ -345,10 +384,11 @@ def fetch_notifications_for_user():
     return jsonify(response), 200
 
 
-@notification.route("/unread-count-notifications", methods=["GET"])
-def fetch_unread_count_notifications_for_user():
+@notification.route("/unread-count", methods=["GET"])
+@authorize
+def fetch_unread_count_notifications_for_user(loggedInUser):
 
-    user_id = request.args.get("user_id")
+    user_id = loggedInUser["user_id"]
 
     cursor = conn.cursor()
     affected_count = 0
@@ -380,7 +420,7 @@ def fetch_unread_count_notifications_for_user():
     return jsonify(response), 200
 
 
-@notification.route("/update-status-notifications", methods=["POST"])
+@notification.route("/status", methods=["PUT"])
 def update_read_status_notifications_for_user():
 
     post_request = request.get_json(force=True)
