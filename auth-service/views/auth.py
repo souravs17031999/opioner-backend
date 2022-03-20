@@ -789,11 +789,14 @@ def login_to_app_via_social(post_request, user_data):
         )
     finally:
         cursor.close()
-
+    
+    print("************ JWT TOKEN APPENDING ********* ")
+    userJwtToken = encode_auth_token(loggedInUserId)
     user_data = {
         "user_id": user_data[0],
         "username": user_data[1],
         "firstname": user_data[4],
+        "token": userJwtToken
     }
 
     return True, user_data
@@ -914,7 +917,9 @@ def signup_to_app_via_social(post_request):
         cursor.close()
 
     print("----------------------------------------------------")
-    user_data = {"user_id": createdUserId}
+    print("************ JWT TOKEN APPENDING ********* ")
+    userJwtToken = encode_auth_token(createdUserId)
+    user_data = {"user_id": createdUserId, "token": userJwtToken}
     if affected_count == 0:
         return False, user_data
     else:
