@@ -92,6 +92,10 @@ breaking existing functionality.
 - Final built image (for every service) contains the ENTRYPOINT which starts the flask api service and runs any scripts supplied before actually starting the service.
 - Every service waits for the postgres service to start first (controlled by script), as every service depends on this one.
 - Repo contains db migration scripts for local setup.
+
+## Docker container optimization
+- We have developed base-python-image which contains all the dependencies pre-installed specific to opioner application requirements that are common for consistency among all microservices and improves build time execution.
+[python-base-image](https://github.com/souravs17031999/base-os-docker)
   
 ### Notes:      
 - The actual database for app will be mounted automatically at `dbdata` directory owned by docker.     
