@@ -222,7 +222,7 @@ def fetch_feed_for_user(loggedInUser):
     if size is None:
         size = 10
     skip = (int(page) - 1) * int(size)
-    select_query = "SELECT u.username, u.firstname, t.list_id, t.description, t.created_at, t.likes, t.comments, t.flagged_by, u.subscribed_by FROM task_list t INNER JOIN users u ON t.user_id = u.user_id WHERE t.privacy = %s AND t.is_flagged = %s ORDER BY t.created_at DESC OFFSET %s LIMIT %s"
+    select_query = "SELECT u.username, u.firstname, u.lastname, t.list_id, t.description, t.created_at, t.likes, t.comments, t.flagged_by, u.subscribed_by FROM task_list t INNER JOIN users u ON t.user_id = u.user_id WHERE t.privacy = %s AND t.is_flagged = %s ORDER BY t.created_at DESC OFFSET %s LIMIT %s"
     cursor = conn.cursor()
     affected_count = 0
 
@@ -316,21 +316,21 @@ def fetch_feed_for_user(loggedInUser):
             has_liked = False
             has_commented = False
             for id in db_data_likes_ids:
-                if id[0] == item[2]:
+                if id[0] == item[3]:
                     has_liked = True
 
             for id in db_data_comments_ids:
-                if id[0] == item[2]:
+                if id[0] == item[3]:
                     has_commented = True
 
             hasUserFlaggedThePost = False
-            flaggedByUsersList = item[7]
+            flaggedByUsersList = item[8]
             for id in flaggedByUsersList:
                 if id == user_id:
                     hasUserFlaggedThePost = True
 
             hasUserSubscribedThisCreator = False
-            subscribedByUsersList = item[8]
+            subscribedByUsersList = item[9]
             for id in subscribedByUsersList:
                 if id == user_id:
                     hasUserSubscribedThisCreator = True
@@ -340,11 +340,12 @@ def fetch_feed_for_user(loggedInUser):
                     "id": iter,
                     "username": item[0],
                     "firstname": item[1],
-                    "list_id": item[2],
-                    "description": item[3],
-                    "created_at": item[4],
-                    "likes": item[5],
-                    "comments": item[6],
+                    "lastname": item[2],
+                    "list_id": item[3],
+                    "description": item[4],
+                    "created_at": item[5],
+                    "likes": item[6],
+                    "comments": item[7],
                     "has_liked": has_liked,
                     "has_commented": has_commented,
                     "is_flagged": hasUserFlaggedThePost,
@@ -1007,7 +1008,7 @@ def fetch_comments_for_user():
         size = 2
     skip = (int(page) - 1) * int(size)
 
-    fetchAllUserCommentsQuery = "SELECT ftc.comment_id, ftc.comment_description, ftc.created_at, ftc.flagged_by, u.username FROM feed_tracking_comments ftc INNER JOIN users u ON ftc.user_id = u.user_id WHERE ftc.list_id = %s AND is_flagged = 0 ORDER BY ftc.created_at DESC OFFSET %s LIMIT %s"
+    fetchAllUserCommentsQuery = "SELECT ftc.comment_id, ftc.comment_description, ftc.created_at, ftc.flagged_by, u.username, u.firstname, u.lastname FROM feed_tracking_comments ftc INNER JOIN users u ON ftc.user_id = u.user_id WHERE ftc.list_id = %s AND is_flagged = 0 ORDER BY ftc.created_at DESC OFFSET %s LIMIT %s"
     db_data = None
     try:
         cursor.execute(
@@ -1046,6 +1047,8 @@ def fetch_comments_for_user():
                 "comment_text": comment[1],
                 "created_at": comment[2],
                 "username": comment[4],
+                "firstname": comment[5],
+                "lastname": comment[6],
                 "is_flagged": hasUserFlaggedComment,
             }
         )

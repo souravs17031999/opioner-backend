@@ -122,7 +122,7 @@ INSERT INTO public.user_notifications (
 VALUES (
         22,
         'update_event',
-        'Welcome to taskly ! Create your first task now, it’s just a click away',
+        'Welcome to Opioner ! Share your first post now, it’s just a click away',
         8,
         0,
         '2021-09-11 11:00:07.829202+05:30'
@@ -154,7 +154,7 @@ INSERT INTO public.user_notifications (
 VALUES (
         23,
         'update_event',
-        'Welcome to taskly ! Create your first task now, it’s just a click away',
+        'Welcome to Opioner ! Share your first post now, it’s just a click away',
         9,
         1,
         '2021-09-11 11:00:48.82872+05:30'
@@ -298,7 +298,7 @@ INSERT INTO public.user_notifications (
 VALUES (
         21,
         'update_event',
-        'Welcome to taskly ! Create your first task now, it’s just a click away',
+        'Welcome to Opioner ! Share your first post now, it’s just a click away',
         1,
         1,
         '2021-09-11 10:53:51.481269+05:30'
@@ -362,7 +362,7 @@ INSERT INTO public.user_notifications (
 VALUES (
         29,
         'update_event',
-        'Welcome to taskly ! Create your first task now, it’s just a click away',
+        'Welcome to Opioner ! Share your first post now, it’s just a click away',
         10,
         1,
         '2021-09-11 11:44:00.080511+05:30'
@@ -426,7 +426,7 @@ INSERT INTO public.user_notifications (
 VALUES (
         37,
         'update_event',
-        'Welcome to taskly ! Create your first task now, it’s just a click away',
+        'Welcome to Opioner ! Share your first post now, it’s just a click away',
         11,
         1,
         '2021-09-11 20:48:48.407318+05:30'

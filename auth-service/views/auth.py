@@ -1,3 +1,4 @@
+from urllib import response
 from flask import Flask, json, jsonify, request, Response, Blueprint, render_template
 from werkzeug.datastructures import Headers
 
@@ -86,6 +87,35 @@ def get_password_hash(password):
     hashed = bcrypt.hashpw(password.encode(), salt)
     print("hashedpwd:", hashed)
     return hashed.decode()
+
+@auth.route("/open-id/connect/token", methods=["POST"])
+def return_open_id_jwt_token():
+
+    post_request = request.get_json(force=True)
+    response = {}
+
+    if post_request["user-id"] is None:
+        print("[ERROR]: Unauthorized access detected for authorized Page for user !")
+        response["status"] = "failure"
+        response["message"] = "Unauthorized access detected for authorized Page for user"
+        return jsonify(response), 401
+
+    try:
+        print("************ JWT TOKEN GENERATION ********* ")
+        userJwtToken = encode_auth_token(post_request["user-id"])
+    except Exception as e:
+        print("Error in generating JWT token for userid: ", post_request["user-id"])
+        print("[ERROR]: ", e)
+        response["status"] = "failure"
+        response["message"] = "Error in generating JWT token for user!"
+        return jsonify(response), 500
+    
+    response = {
+        "status": "success",
+        "message": "user authorized token generation successfull !",
+        "token": userJwtToken
+    }
+    return jsonify(response), 200
 
 
 @auth.route("/v2/generate/otp", methods=["POST"])
@@ -399,7 +429,7 @@ def signup_to_app(post_request):
             insertNotificationQuery,
             (
                 "update_event",
-                "Welcome to taskly ! Create your first task now, it’s just a click away",
+                "Welcome to Opioner ! Share your first post now, it's just a click away",
                 db_data[0],
             ),
         )
@@ -418,6 +448,9 @@ def signup_to_app(post_request):
     if affected_count == 0:
         return False, user_data
     else:
+        print("************ JWT TOKEN APPENDING ********* ")
+        userJwtToken = encode_auth_token(createdUserId)
+        user_data["token"] = userJwtToken
         return True, user_data
 
 
@@ -607,6 +640,8 @@ def generate_OTP_signup():
         print(f"{affected_count} rows affected")
     except Exception as e:
         print(e)
+    finally:
+        cursor.close()
 
     print("----------------------------------------------------")
     if affected_count != 0:
@@ -616,7 +651,7 @@ def generate_OTP_signup():
         ] = "Chosen username already exists ! Try again with different username."
         return jsonify(response), 403
 
-    cursor.close()
+    
 
     key_for_redis = post_request["email"] + post_request["secret_token"]
     N = OTP_DIGITS
@@ -811,13 +846,14 @@ def signup_to_app_via_social(post_request):
 
     if post_request["action_event_source"] == "google":
 
-        insertQuery = "INSERT INTO users(username, firstname, email, google_profile_url, is_google_verified, google_token_id) VALUES(%s, %s, %s, %s, %s, %s)"
+        insertQuery = "INSERT INTO users(username, firstname, lastname, email, google_profile_url, is_google_verified, google_token_id) VALUES(%s, %s, %s, %s, %s, %s)"
         try:
             cursor.execute(
                 insertQuery,
                 (
                     post_request["username"],
                     post_request["firstname"],
+                    post_request["lastname"],
                     post_request["email"],
                     post_request["google_profile_url"],
                     1,
@@ -834,13 +870,14 @@ def signup_to_app_via_social(post_request):
 
     elif post_request["action_event_source"] == "facebook":
 
-        insertQuery = "INSERT INTO users(username, firstname, email, facebook_profile_url, is_facebook_verified, facebook_token_id, facebook_user_id, gender) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
+        insertQuery = "INSERT INTO users(username, firstname, lastname, email, facebook_profile_url, is_facebook_verified, facebook_token_id, facebook_user_id, gender) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
         try:
             cursor.execute(
                 insertQuery,
                 (
                     post_request["username"],
                     post_request["firstname"],
+                    post_request["lastname"],
                     post_request["email"],
                     post_request["facebook_profile_url"],
                     1,
@@ -902,7 +939,7 @@ def signup_to_app_via_social(post_request):
             insertNotificationQuery,
             (
                 "update_event",
-                "Welcome to taskly ! Create your first task now, it’s just a click away",
+                "Welcome to Opioner ! Share your first post now, it's just a click away",
                 db_data[0],
             ),
         )
@@ -971,6 +1008,7 @@ def verify_social_sign_up():
             "action_event_source": "google",
             "username": post_request["email"],
             "firstname": post_request["firstname"],
+            "lastname": post_request["lastname"],
             "email": post_request["email"],
             "google_profile_url": post_request["google_profile_url"],
             "google_token_id": post_request["google_token_id"],
@@ -981,6 +1019,7 @@ def verify_social_sign_up():
             "name": post_request["name"],
             "username": post_request["email"],
             "firstname": post_request["firstname"],
+            "lastname": post_request["lastname"],
             "email": post_request["email"],
             "facebook_profile_url": post_request["facebook_profile_url"],
             "facebook_token_id": post_request["facebook_token_id"],
