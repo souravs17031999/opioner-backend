@@ -12,6 +12,36 @@ echo $HEROKU_APPS
 
 TOPDIR=$(git rev-parse --show-toplevel)
 
+if [[ "$SKIP_TO_SCALE" == "TRUE" ]]; then
+  echo "Only scaling heroku apps....."
+  cd $TOPDIR/auth-service 
+  heroku ps:scale web=1 -a auth-service-prd
+  cd $TOPDIR/product-service 
+  heroku ps:scale web=1 -a product-service-prd
+  cd $TOPDIR/user-service 
+  heroku ps:scale web=1 -a user-service-prd01
+  cd $TOPDIR/notification-service 
+  heroku ps:scale web=1 -a notification-service-prd
+  cd $TOPDIR/cron-service
+  heroku ps:scale worker=1 -a cron-worker-prd
+  exit 0
+fi
+
+if [[ "$SKIP_TO_DELETE" == "TRUE" ]]; then
+  echo "DELETING heroku apps....."
+  cd $TOPDIR/auth-service 
+  heroku ps:scale web=0 -a auth-service-prd
+  cd $TOPDIR/product-service 
+  heroku ps:scale web=0 -a product-service-prd
+  cd $TOPDIR/user-service 
+  heroku ps:scale web=0 -a user-service-prd01
+  cd $TOPDIR/notification-service 
+  heroku ps:scale web=0 -a notification-service-prd
+  cd $TOPDIR/cron-service
+  heroku ps:scale worker=0 -a cron-worker-prd
+  exit 0
+fi
+
 if [[ "$HEROKU_APPS" =~ .*"auth-service-prd".* ]]; then
   echo "deploying opioner auth service to production ...."
   cd $TOPDIR/auth-service 
