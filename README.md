@@ -106,6 +106,7 @@ breaking existing functionality.
 - `dbinit` contains test data to be migrated while starting postgres container and can be used for testing.
 - Currently, db migration step has been added in `auth-service`, in future it maybe be segragated.
 - Currently, we have total 5 services: `auth-service`, `user-service`, `product-service`, `notification-service`, `cron-service`.  
+- All environment variables in Dockerfile are just default values, actual values are injected on the fly while deployment (not commited due to security reasons).
 
 _Rest API's have been designed using best practices which conveys the exact purpose of what each API does_
 
