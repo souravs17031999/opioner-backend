@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e 
+
 if [[ -z $WORKSPACE ]]; then 
     TOPDIR=$(git rev-parse --show-toplevel)
     source $TOPDIR/build-scripts/env.sh

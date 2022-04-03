@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e 
 
 echo "Starting deployment to Heroku CI/CD....."
 
