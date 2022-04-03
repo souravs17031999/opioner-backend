@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-source $WORKSPACE/build-scripts/env.sh
+if [[ -z $WORKSPACE ]]; then 
+    TOPDIR=$(git rev-parse --show-toplevel)
+    source $TOPDIR/build-scripts/env.sh
+else
+    source $WORKSPACE/build-scripts/env.sh
+fi
 
 echo "Building Docker containers for apitest ..... "
 docker-compose $TEST_COMPOSE_LIST build $TEST_CONTAINER

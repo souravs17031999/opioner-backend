@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
-source $WORKSPACE/build-scripts/env.sh
+if [[ -z $WORKSPACE ]]; then 
+    TOPDIR=$(git rev-parse --show-toplevel)
+    source $TOPDIR/build-scripts/env.sh
+else
+    source $WORKSPACE/build-scripts/env.sh
+fi
+
 echo "Cleaning up dockers"
 
 docker-compose $BUILD_COMPOSE_LIST down --volumes --rmi local --remove-orphans
