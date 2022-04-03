@@ -22,6 +22,7 @@ or
 
 ## Test the project locally:
 
+- Run `make build`
 - Run `make test`
 
 ## Test the deployed project:
@@ -65,6 +66,9 @@ or
 - Tests are integrated in the pipeline (preferably Jenkins pipeline) before and after the delivery of end product to make sure we deliver the value of the product without
 breaking existing functionality.
 - Run `make heroku_deploy` to deploy to Heroku cluster.
+
+### Github CI pipeline:
+- Every push to master branch triggers github Makefile CI actions workflow which builds, test and deploy container images.
 
 ### New Relic Monitoring
 - We already have integrated new relic monitoring dashboards but configuration file `newrelic.ini` will have to be provided (inserted at each service root dir) 
