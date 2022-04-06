@@ -24,4 +24,5 @@ jobs:
       run: echo "Skipping publishing to dockerHub"
       
     - name: Cleanup workspace
+      if: always()
       run: make clean
