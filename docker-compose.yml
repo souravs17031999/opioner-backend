@@ -91,7 +91,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "8085:8084"
+      - "8086:8084"
     depends_on:
       - postgres
     links:
