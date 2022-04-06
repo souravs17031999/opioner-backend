@@ -1,6 +1,7 @@
 # Opioner-backend-docker-app
 
 ![MAKEFILE CI](https://github.com/souravs17031999/opioner-backend/actions/workflows/makefile.yml/badge.svg)
+![Security CI](https://github.com/souravs17031999/opioner-backend/actions/workflows/codeql-analysis.yml/badge.svg)
 
 # Goal - MAKE YOUR OPINION COUNT AND SHARE WITH WORLD
 
