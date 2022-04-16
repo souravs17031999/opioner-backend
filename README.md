@@ -73,6 +73,7 @@ breaking existing functionality.
 
 ### Github CI pipeline:
 - Every push to master branch triggers github Makefile CI actions workflow which builds, test and deploy container images.
+- Additional code quality checks via [SONAR quality checks](https://sonarcloud.io/project/overview?id=souravs17031999_opioner-backend) have been integrated.
 
 ### New Relic Monitoring
 - We already have integrated new relic monitoring dashboards but configuration file `newrelic.ini` will have to be provided (inserted at each service root dir) 
