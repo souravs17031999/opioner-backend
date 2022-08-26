@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "exporting environment variables (build-scripts) .... "
+echo "exporting environment variables (opioner-commons) .... "
 
 export TOPDIR=$(git rev-parse --show-toplevel)
 export FULL_BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)

@@ -2,29 +2,29 @@
 
 build:
 	@echo "MAKE build ==========================================="
-	build-scripts/docker-flow.sh  
+	opioner-commons/docker-flow.sh  
 
 test:
 	@echo "MAKE test ==========================================="
 	TEST_SUITE_DIR="apitest" \
-	build-scripts/run-tests.sh  
+	opioner-commons/run-tests.sh  
 
 test_postdeploy:
 	@echo "MAKE test_postdeploy ==========================================="
 	TEST_SUITE_DIR="postdeploy" \
-	build-scripts/post-deploy-test.sh  
+	opioner-commons/post-deploy-test.sh  
 
 publish:
 	@echo "MAKE publish ==========================================="
-	# build-scripts/publish.sh  
+	# opioner-commons/publish.sh  
 
 clean:
 	@echo "MAKE clean ===========================================" 
-	build-scripts/clean-dockers.sh 
+	opioner-commons/clean-dockers.sh 
 
 heroku_deploy:
 	@echo "MAKE heroku_deploy ===========================================" 
-	build-scripts/deploy-heroku.sh 
+	opioner-commons/deploy-heroku.sh 
 
 local:
 	@echo "MAKE local ==========================================="

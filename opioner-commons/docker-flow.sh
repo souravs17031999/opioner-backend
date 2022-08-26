@@ -4,9 +4,9 @@ set -e
 
 if [[ -z $WORKSPACE ]]; then 
     TOPDIR=$(git rev-parse --show-toplevel)
-    source $TOPDIR/build-scripts/env.sh
+    source $TOPDIR/opioner-commons/env.sh
 else
-    source $WORKSPACE/build-scripts/env.sh
+    source $WORKSPACE/opioner-commons/env.sh
 fi
 
 echo " Build docker image for opioner backend app ......"

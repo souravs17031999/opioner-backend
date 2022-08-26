@@ -119,7 +119,7 @@ breaking existing functionality.
 
 _Rest API's have been designed using best practices which conveys the exact purpose of what each API does_
 
-_`Build-scripts` contains the useful scripts to be run on Jenkins CI/CD pipeline_
+_`opioner-commons` contains the useful scripts to be run on Jenkins CI/CD pipeline_
 
 _`Hot reloading`: enabled for all services, server is reloaded as soon as code change is detected in development_
 
