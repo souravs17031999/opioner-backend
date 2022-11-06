@@ -1,45 +1,17 @@
-from flask import Flask, json, jsonify, request, Response, Blueprint
-from werkzeug.datastructures import Headers
+from flask import Flask, jsonify, request, Blueprint
 
-# from flaskext.mysql import MySQL
-import jwt
-import datetime
 from functools import wraps
 import os
 import psycopg2
-import requests
 import subprocess
 
 app = Flask(__name__)
-
-# mysql = MySQL()
-# app.config['MYSQL_DATABASE_USER'] = os.getenv('MYSQL_DATABASE_USER')
-# app.config['MYSQL_DATABASE_PASSWORD'] = os.getenv('MYSQL_DATABASE_PASSWORD')
-# app.config['MYSQL_DATABASE_DB'] = os.getenv('MYSQL_DATABASE_DB')
-# app.config['MYSQL_DATABASE_HOST'] = os.getenv('MYSQL_DATABASE_HOST')
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-
-# mysql.init_app(app)
 
 product = Blueprint("product", __name__)
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
 if os.getenv("DATABASE_URL") != "":
     DATABASE_URL = os.getenv("DATABASE_URL")
 conn = psycopg2.connect(DATABASE_URL)
-
-def decode_auth_token(auth_token):
-    """
-    Decodes the auth token
-    :param auth_token:
-    :return: integer|string
-    """
-    try:
-        payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'), algorithms='HS256')
-        return payload['sub']
-    except jwt.ExpiredSignatureError:
-        return 'Signature expired. Please log in again.'
-    except jwt.InvalidTokenError:
-        return 'Invalid token. Please log in again.'
 
 @product.route("/status/live", methods=["GET", "POST"])
 def liveness_product_service():
@@ -152,7 +124,6 @@ def authorize(f):
 
 
 @product.route("/my/feed", methods=["GET"])
-@authorize
 def fetch_user_list(loggedInUser):
 
     # conn = mysql.connect()
@@ -210,7 +181,6 @@ def fetch_user_list(loggedInUser):
 
 
 @product.route("/public/feeds", methods=["GET"])
-@authorize
 def fetch_feed_for_user(loggedInUser):
 
     user_id = loggedInUser["user_id"]
@@ -360,7 +330,6 @@ def fetch_feed_for_user(loggedInUser):
 
 
 @product.route("/feed/upsert", methods=["POST"])
-@authorize
 def submit_or_update_user_task(loggedInUser):
 
     post_request = request.get_json(force=True)

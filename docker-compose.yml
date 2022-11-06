@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3"
 services:
   auth_service:
     build:
@@ -31,8 +31,6 @@ services:
       - REDIS_PORT 
       - REDIS_URL 
       - NOTIFICATION_INTERNAL_URL
-      - APM_MONITORING_NEWRELIC
-      - SECRET_KEY
     volumes:
       - ./auth-service:/app
   user_service:
@@ -56,9 +54,8 @@ services:
       - FIREBASE_PROFILE_PIC_PATH
       - PORT=8082
       - DATABASE_URL
-      - APM_MONITORING_NEWRELIC
-      - SECRET_KEY
       - FIREBASE_SECRET_CONFIG
+      - OIDC_CONFIG
     volumes:
       - ./user-service:/app
   product_service:
@@ -81,8 +78,7 @@ services:
       - TEST_JENKINS_BUILD
       - PORT=8083
       - DATABASE_URL
-      - APM_MONITORING_NEWRELIC
-      - SECRET_KEY
+      - OIDC_CONFIG
     volumes:
       - ./product-service:/app
   notification_service:
@@ -106,8 +102,7 @@ services:
       - SENDGRID_API_KEY_PROD
       - PORT=8084
       - DATABASE_URL
-      - APM_MONITORING_NEWRELIC
-      - SECRET_KEY
+      - OIDC_CONFIG
     volumes:
       - ./notification-service:/app
   cron_service:
@@ -131,8 +126,7 @@ services:
       - SENDGRID_API_KEY_PROD
       - PORT=8085
       - DATABASE_URL
-      - APM_MONITORING_NEWRELIC
-      - SECRET_KEY
+      - OIDC_CONFIG
     volumes:
       - ./cron-service:/app
   postgres:
