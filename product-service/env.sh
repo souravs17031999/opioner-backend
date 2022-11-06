@@ -19,6 +19,9 @@ elif [ -z $PGDATABASE ]; then
 elif [ -z $ALLOWED_ORIGIN_HOST_PROD ]; then 
     echo "------------------ [ERROR]: ALLOWED_ORIGIN_HOST_PROD NOT DEFINED"
     exit 1
+elif [ -z $OIDC_CONFIG ]; then 
+    echo "------------------ [ERROR]: OIDC_CONFIG NOT DEFINED"
+    exit 1
 elif [ -z $TEST_JENKINS_BUILD ]; then 
     echo "------------------ [WARNING]: TEST_JENKINS_BUILD ENV VAR NOT DEFINED"
 fi

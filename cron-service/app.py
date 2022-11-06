@@ -6,7 +6,6 @@ import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-# from flaskext.mysql import MySQL
 import datetime
 import jinja2
 import os
@@ -22,18 +21,20 @@ conn = psycopg2.connect(DATABASE_URL)
 SENDGRID_API_KEY_PROD = os.getenv("SENDGRID_API_KEY_PROD")
 SENDGRID_SENDER_EMAIL = "opinic.contact@gmail.com"
 
+oidc_config = json.loads(os.getenv("OIDC_CONFIG"))
+app.config['SERVER_URL'] = oidc_config["server_url"]
+app.config['TOKEN_ISSUER'] = oidc_config["issuer"]
+app.config['AUDIENCE_CLAIM'] = oidc_config["audience"]
+
+SIGNATURE_EXPIRED = "SIGNATURE_EXPIRED"
+INVALID_ISSUER = "INVALID_ISSUER"
+INVALID_TOKEN = "INVALID_TOKEN"
+INVALID_AUDIENCE = "INVALID_AUDIENCE"
+PUBLIC_KEY_SERVER_ERROR = "PUBLIC_KEY_SERVER_ERROR"
+SIGNATURE_VERIFICATION_FAILED = "SIGNATURE_VERIFICATION_FAILED"
+
 # Instantiating the scheduler for the cronjob
 cron_schedular = BlockingScheduler()
-
-# # Defining a cronjob function to run alongside the Flask app
-# mysql = MySQL()
-# app.config['MYSQL_DATABASE_USER'] = os.getenv('MYSQL_DATABASE_USER')
-# app.config['MYSQL_DATABASE_PASSWORD'] = os.getenv('MYSQL_DATABASE_PASSWORD')
-# app.config['MYSQL_DATABASE_DB'] = os.getenv('MYSQL_DATABASE_DB')
-# app.config['MYSQL_DATABASE_HOST'] = os.getenv('MYSQL_DATABASE_HOST')
-# app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-
-# mysql.init_app(app)
 
 # generate and execute template for sending mails with dynamic vars
 print("Initializing CRON Schedular.... ")

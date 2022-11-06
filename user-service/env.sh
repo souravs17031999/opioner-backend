@@ -22,6 +22,9 @@ elif [ -z $ALLOWED_ORIGIN_HOST_PROD ]; then
 elif [ -z $FIREBASE_SECRET_CONFIG ]; then 
     echo "------------------ [ERROR]: FIREBASE_SECRET_CONFIG NOT DEFINED"
     exit 1
+elif [ -z $OIDC_CONFIG ]; then 
+    echo "------------------ [ERROR]: OIDC_CONFIG NOT DEFINED"
+    exit 1
 elif [ -z $TEST_JENKINS_BUILD ]; then 
     echo "------------------ [WARNING]: TEST_JENKINS_BUILD ENV VAR NOT DEFINED"
 fi
