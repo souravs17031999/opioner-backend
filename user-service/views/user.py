@@ -1,4 +1,4 @@
-from flask import Flask, json, jsonify, request, Response, Blueprint
+from flask import Flask, json, jsonify, request, Response, Blueprint, g
 from werkzeug.datastructures import Headers
 
 # from flaskext.mysql import MySQL
@@ -30,14 +30,14 @@ if os.getenv("DATABASE_URL") != "":
     DATABASE_URL = os.getenv("DATABASE_URL")
 conn = psycopg2.connect(DATABASE_URL)
 
-firebaseConfig = json.loads(os.getenv("FIREBASE_SECRET_CONFIG"))
-FIREBASE_PROFILE_PIC_PATH = os.getenv("FIREBASE_PROFILE_PIC_PATH")
+def get_request_context(f):
+    @wraps(f)
+    def decorated_function(*args, **kws):
 
-firebase = pyrebase.initialize_app(firebaseConfig)
-print("Initializing firebase storage....")
-print(firebase)
-storage = firebase.storage()
-print(storage)
+        loggedInUserData = g.loggedInUserData
+        return f(loggedInUserData, *args, **kws)
+
+    return decorated_function
 
 @user.route("/status/live", methods=["GET", "POST"])
 def liveness_user_service():
@@ -68,7 +68,8 @@ def health_check_user_service():
         }), 200
 
 @user.route("/users", methods=["GET"])
-def get_all_current_users():
+@get_request_context
+def get_all_current_users(loggedInUser):
 
     # conn = mysql.connect()
     cursor = conn.cursor()
@@ -104,23 +105,55 @@ def get_all_current_users():
     return jsonify(response), 200
 
 
-@user.route("/data", methods=["GET"])
-def fetch_user_data(loggedInUser):
+@user.route("/data", methods=["POST"])
+@get_request_context
+def upsert_user_data(loggedInUser):
 
     user_id = loggedInUser["user_id"]
+    post_request = request.get_json(force=True)
+    profile_pic_url = post_request["profile_pic"]
     # conn = mysql.connect()
     cursor = conn.cursor()
     affected_count = 0
 
-    query = "SELECT username,firstname,lastname,phone,email,is_google_verified,google_profile_url,is_facebook_verified,facebook_profile_url FROM users WHERE user_id = %s"
     try:
-        cursor.execute(query, (user_id,))
+
+        selectUserQuery = (
+            "SELECT * FROM users WHERE user_id = %s"
+        )
+
+        cursor.execute(selectUserQuery, (user_id,))
         affected_count = cursor.rowcount
         print("----------------------------------------------------")
+        print("Check if user already exists ...")
         print(cursor.query.decode())
         print(f"{affected_count} rows affected")
         db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
+        print("db_data: ", db_data)
+
+        if affected_count == 0:
+
+            print("User doesn't exists ! Creating new user .....")
+            insertUserQuery = "INSERT INTO users(user_id, username, firstname, lastname, email, profile_pic_url) VALUES(%s, %s, %s, %s, %s, %s)"
+            cursor.execute(
+                insertUserQuery,
+                (
+                    user_id,
+                    loggedInUser["username"],
+                    loggedInUser["firstname"],
+                    loggedInUser["lastname"],
+                    loggedInUser["email"],
+                    profile_pic_url,
+                ),
+            )
+            conn.commit()
+            affected_count = cursor.rowcount
+            print(cursor.query.decode())
+            print(f"{affected_count} rows affected")
+        else:
+            print("User already exists ..., skip creation of new entity")
+
+
     except Exception as e:
         print(e)
     finally:
@@ -128,74 +161,16 @@ def fetch_user_data(loggedInUser):
 
     print("----------------------------------------------------")
 
-    # storage.child("profile_avatar/1.jpg").put(
-    #     "/home/souravcovenant/Desktop/MENU_grocery_template/avatar.png")
-    # print(storage)
-    print("****** FETCHING PROFILE PIC FROM FIREBASE *******")
-    APP_UPLOAD_FIREBASE_PATH = f"{FIREBASE_PROFILE_PIC_PATH}/{user_id}.png"
-    print(
-        "[debug]: fetching from firebase at APP_UPLOAD_FIREBASE_PATH: ",
-        APP_UPLOAD_FIREBASE_PATH,
-    )
-    avatar_fetched_image_path = storage.child(APP_UPLOAD_FIREBASE_PATH).get_url(user_id)
-    print("============ Got user image: ", avatar_fetched_image_path)
-
     response = {}
     response["status"] = "success"
-    if affected_count != 0:
-        response["message"] = "Users fetched successfully !"
-        response["user_data"] = {
-            "username": db_data[0],
-            "firstname": db_data[1],
-            "lastname": db_data[2],
-            "phone": db_data[3],
-            "email": db_data[4],
-            "profile_picture_url": avatar_fetched_image_path,
-            "is_google_verified": db_data[5],
-            "google_profile_url": db_data[6],
-            "is_facebook_verified": db_data[7],
-            "facebook_profile_url": db_data[8],
-        }
-
-        return jsonify(response), 200
-
-    else:
-        response["message"] = "Unauthorized, No active users found in records !"
-        return jsonify(response), 401
-
-
-@user.route("/profile-pic", methods=["PUT"])
-def update_profile_pic_for_user():
-
-    if request.files.get("file") is None:
-        return (
-            jsonify(
-                {
-                    "status": "failure",
-                    "message": "No file sent for uploading or wrong format sent for request ! Try again",
-                }
-            ),
-            401,
-        )
-
-    profile_avatar_user = request.files["file"]
-    user_id = request.form["user_id"]
-    APP_UPLOAD_FIREBASE_PATH = f"{FIREBASE_PROFILE_PIC_PATH}/{user_id}.png"
-    print(
-        "[debug]: uploading to firebase at APP_UPLOAD_FIREBASE_PATH: ",
-        APP_UPLOAD_FIREBASE_PATH,
-    )
-    storage.child(APP_UPLOAD_FIREBASE_PATH).put(profile_avatar_user)
-
-    response = {}
-    response["status"] = "success"
-    response["message"] = "Profile upload successfully !"
+    response["message"] = "User data updated succesfully"
 
     return jsonify(response), 200
 
 
 @user.route("/status", methods=["POST"])
-def fetch_user_status_auth():
+@get_request_context
+def fetch_user_status_auth(loggedInUser):
 
     post_request = request.get_json(force=True)
 
@@ -232,6 +207,7 @@ def fetch_user_status_auth():
 
 
 @user.route("/subscription", methods=["POST"])
+@get_request_context
 def subscribe_user(loggedInuser):
 
     # conn = mysql.connect()
@@ -368,7 +344,8 @@ def subscribe_user(loggedInuser):
 
 
 @user.route("/data", methods=["DELETE"])
-def delete_user_data():
+@get_request_context
+def delete_user_data(loggedInUser):
 
     post_request = request.get_json(force=True)
 
@@ -378,7 +355,7 @@ def delete_user_data():
 
     deleteUserDataQuery = "DELETE FROM users u WHERE u.user_id = %s"
     try:
-        cursor.execute(deleteUserDataQuery, (post_request["user_id"],))
+        cursor.execute(deleteUserDataQuery, (loggedInUser["user_id"],))
         conn.commit()
         affected_count = cursor.rowcount
         print("----------------------------------------------------")
@@ -389,7 +366,7 @@ def delete_user_data():
 
     deleteSessionsDataQuery = "DELETE FROM login_sessions ls WHERE ls.user_id = %s"
     try:
-        cursor.execute(deleteSessionsDataQuery, (post_request["user_id"],))
+        cursor.execute(deleteSessionsDataQuery, (loggedInUser["user_id"],))
         conn.commit()
         affected_count = cursor.rowcount
         print("----------------------------------------------------")
@@ -402,7 +379,7 @@ def delete_user_data():
         "DELETE FROM user_notifications un WHERE un.user_id = %s"
     )
     try:
-        cursor.execute(deleteNotificationsDataQuery, (post_request["user_id"],))
+        cursor.execute(deleteNotificationsDataQuery, (loggedInUser["user_id"],))
         conn.commit()
         affected_count = cursor.rowcount
         print("----------------------------------------------------")

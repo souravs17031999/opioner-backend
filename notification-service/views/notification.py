@@ -1,4 +1,4 @@
-from flask import Flask, json, jsonify, request, Response, Blueprint
+from flask import Flask, json, jsonify, request, Response, Blueprint, g 
 from werkzeug.datastructures import Headers
 
 import jwt
@@ -26,6 +26,16 @@ SENDGRID_SENDER_EMAIL = "opinic.contact@gmail.com"
 SENDGRID_STATUS_API = "https://status.sendgrid.com/api/v2/summary.json"
 
 conn = psycopg2.connect(DATABASE_URL)
+
+
+def get_request_context(f):
+    @wraps(f)
+    def decorated_function(*args, **kws):
+
+        loggedInUserData = g.loggedInUserData
+        return f(loggedInUserData, *args, **kws)
+
+    return decorated_function
 
 def generate_mail_content(template_name, **template_vars):
 
@@ -150,12 +160,13 @@ def send_email_notifications_for_user():
 
 
 @notification.route("/me", methods=["POST"])
-def insert_notifications_for_user():
+@get_request_context
+def insert_notifications_for_user(loggedInUser):
 
     post_request = request.get_json(force=True)
     event_type = post_request["event_type"]
     event_description = post_request["event_description"]
-    user_id = post_request["user_id"]
+    user_id = loggedInUser["user_id"]
     # conn = mysql.connect()
     cursor = conn.cursor()
     affected_count = 0
@@ -205,9 +216,10 @@ def insert_notifications_for_user():
 
 
 @notification.route("/all", methods=["GET"])
-def fetch_notifications_for_user():
+@get_request_context
+def fetch_notifications_for_user(loggedInUser):
 
-    user_id = request.args.get("user_id")
+    user_id = loggedInUser["user_id"]
     all_flag = request.args.get("all_flag")
 
     # conn = mysql.connect()
@@ -280,6 +292,7 @@ def fetch_notifications_for_user():
 
 
 @notification.route("/unread-count", methods=["GET"])
+@get_request_context
 def fetch_unread_count_notifications_for_user(loggedInUser):
 
     user_id = loggedInUser["user_id"]
@@ -315,11 +328,12 @@ def fetch_unread_count_notifications_for_user(loggedInUser):
 
 
 @notification.route("/status", methods=["PUT"])
-def update_read_status_notifications_for_user():
+@get_request_context
+def update_read_status_notifications_for_user(loggedInUser):
 
     post_request = request.get_json(force=True)
     event_id = post_request["event_id"]
-    user_id = post_request["user_id"]
+    user_id = loggedInUser["user_id"]
 
     cursor = conn.cursor()
     affected_count = 0

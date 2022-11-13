@@ -6,6 +6,11 @@ import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
+import logging
+
+logging.basicConfig()
+logging.getLogger('apscheduler').setLevel(logging.DEBUG)
+
 import datetime
 import jinja2
 import os
@@ -21,6 +26,13 @@ conn = psycopg2.connect(DATABASE_URL)
 SENDGRID_API_KEY_PROD = os.getenv("SENDGRID_API_KEY_PROD")
 SENDGRID_SENDER_EMAIL = "opinic.contact@gmail.com"
 
+CRON_TIME_FLAGGED_COMMENTS_MINUTES = int(os.getenv("CRON_TIME_FLAGGED_COMMENTS_MINUTES")) if os.getenv("CRON_TIME_FLAGGED_COMMENTS_MINUTES") is not None else 1
+CRON_TIME_FLAGGED_FEEDS_MINUTES = int(os.getenv("CRON_TIME_FLAGGED_FEEDS_MINUTES")) if os.getenv("CRON_TIME_FLAGGED_FEEDS_MINUTES") is not None else 1
+CRON_TIME_DAILY_FEED_EXP = os.getenv("CRON_TIME_DAILY_FEED_EXP") if os.getenv("CRON_TIME_DAILY_FEED_EXP") is not None and os.getenv("CRON_TIME_DAILY_FEED_EXP") != "" else "13-30-00"
+CRON_TIME_DAILY_FEED_EXP_HR = CRON_TIME_DAILY_FEED_EXP.split("-")[0]
+CRON_TIME_DAILY_FEED_EXP_MIN = CRON_TIME_DAILY_FEED_EXP.split("-")[1]
+CRON_TIME_DAILY_FEED_EXP_SEC = CRON_TIME_DAILY_FEED_EXP.split("-")[2]
+
 oidc_config = json.loads(os.getenv("OIDC_CONFIG"))
 app.config['SERVER_URL'] = oidc_config["server_url"]
 app.config['TOKEN_ISSUER'] = oidc_config["issuer"]
@@ -34,7 +46,7 @@ PUBLIC_KEY_SERVER_ERROR = "PUBLIC_KEY_SERVER_ERROR"
 SIGNATURE_VERIFICATION_FAILED = "SIGNATURE_VERIFICATION_FAILED"
 
 # Instantiating the scheduler for the cronjob
-cron_schedular = BlockingScheduler()
+cron_schedular = BlockingScheduler(timezone="Asia/Kolkata")
 
 # generate and execute template for sending mails with dynamic vars
 print("Initializing CRON Schedular.... ")
@@ -81,7 +93,7 @@ def send_mail(emailData, template_name):
 
 
 # send gist of newly created feeds in last 24 hrs subscribed by followers at 07:00 PM IST
-@cron_schedular.scheduled_job(trigger="cron", hour="13", minute="30", second="00")
+@cron_schedular.scheduled_job(trigger="cron", hour=CRON_TIME_DAILY_FEED_EXP_HR, minute=CRON_TIME_DAILY_FEED_EXP_MIN, second=CRON_TIME_DAILY_FEED_EXP_SEC)
 def send_new_feeds_notification_for_creators():
 
     print(
@@ -190,7 +202,7 @@ def send_new_feeds_notification_for_creators():
 
 
 # set flag status for comments every 5 min if flagged count > 5
-@cron_schedular.scheduled_job(trigger="interval", minutes=5)
+@cron_schedular.scheduled_job(trigger="interval", minutes=CRON_TIME_FLAGGED_COMMENTS_MINUTES)
 def set_flag_status_for_comments():
 
     print(
@@ -236,7 +248,7 @@ def set_flag_status_for_comments():
 
 
 # set flag status for public feed every 8 min if flagged count > 5
-@cron_schedular.scheduled_job(trigger="interval", minutes=8)
+@cron_schedular.scheduled_job(trigger="interval", minutes=CRON_TIME_FLAGGED_FEEDS_MINUTES)
 def set_flag_status_for_feeds():
 
     print(
@@ -278,5 +290,7 @@ def set_flag_status_for_feeds():
     print("----------------------------------------------------")
     cursor.close()
 
-
+print(">>>>>>>>>>>>>> Registered Jobs <<<<<<<<<<<<<<<<<<<<")
+cron_schedular.print_jobs()
+print(">>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<<<<")
 cron_schedular.start()

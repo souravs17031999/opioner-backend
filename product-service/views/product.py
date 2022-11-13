@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, Blueprint
+from flask import Flask, jsonify, request, Blueprint, g
 
 from functools import wraps
 import os
@@ -41,89 +41,18 @@ def health_check_product_service():
         "component_status": components_check
         }), 200
 
-def authorize(f):
+def get_request_context(f):
     @wraps(f)
     def decorated_function(*args, **kws):
 
-        cursor = conn.cursor()
-        authToken = ""
-        request_user_id = -1
-
-        try:
-            if 'Authorization' in request.headers:
-                print("[debug]: Got token, Decoding JWT token.... ", request.headers['Authorization'])
-                split_token = request.headers['Authorization'].split(" ")
-                if split_token[0] == "Bearer":
-                    authToken = decode_auth_token(split_token[1])
-                else:
-                    print("[Error]: Token not in valid format")
-                print("[debug]: decode token=> ", authToken)
-                request_user_id = authToken["user-id"]
-        except Exception as e:
-            print(e)
-            return (
-                jsonify(
-                    {
-                        "status": "failure",
-                        "message": "Unauthorized request !, Token is Expired or Invalid !",
-                    }
-                ),
-                401,
-            )
-        
-        if request_user_id == -1:
-            if request.method == "GET":
-                request_user_id = request.args.get("user_id")
-            else:
-                request_user_id = request.get_json(force=True).get("user_id")
-
-        print("Authorization for user_id: ", request_user_id)
-        authorizeUserQuery = "SELECT u.* FROM users u WHERE u.user_id = %s"
-        affected_count = 0
-        user_data = None
-        try:
-            cursor.execute(authorizeUserQuery, (request_user_id,))
-            affected_count = cursor.rowcount
-            user_data = cursor.fetchone()
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
-            print("----------------------------------------------------")
-            print("logged in authorized user data: ", user_data)
-            print("----------------------------------------------------")
-            conn.commit()
-        except Exception as e:
-            print(e)
-            conn.rollback()
-        finally:
-            cursor.close()
-
-        if affected_count == 0:
-            return (
-                jsonify(
-                    {
-                        "status": "failure",
-                        "message": "unauthorized request !",
-                    }
-                ),
-                401,
-            )
-
-        loggedInUser = {
-            "user_id": user_data[0],
-            "username": user_data[1],
-            "firstname": user_data[3],
-            "lastname": user_data[4],
-            "email": user_data[5],
-            "phone": user_data[6],
-            "created_at": user_data[7],
-        }
-
-        return f(loggedInUser, *args, **kws)
+        loggedInUserData = g.loggedInUserData
+        return f(loggedInUserData, *args, **kws)
 
     return decorated_function
 
 
 @product.route("/my/feed", methods=["GET"])
+@get_request_context
 def fetch_user_list(loggedInUser):
 
     # conn = mysql.connect()
@@ -167,13 +96,6 @@ def fetch_user_list(loggedInUser):
                 }
             )
 
-        user_data = {
-            "user_id": loggedInUser["user_id"],
-            "firstname": loggedInUser["firstname"],
-            "phone": loggedInUser["phone"],
-            "email": loggedInUser["email"],
-        }
-        response["user_data"] = user_data
         response["status"] = "success"
         response["task"] = tasks
 
@@ -181,6 +103,7 @@ def fetch_user_list(loggedInUser):
 
 
 @product.route("/public/feeds", methods=["GET"])
+@get_request_context
 def fetch_feed_for_user(loggedInUser):
 
     user_id = loggedInUser["user_id"]
@@ -192,7 +115,12 @@ def fetch_feed_for_user(loggedInUser):
     if size is None:
         size = 10
     skip = (int(page) - 1) * int(size)
-    select_query = "SELECT u.username, u.firstname, u.lastname, t.list_id, t.description, t.created_at, t.likes, t.comments, t.flagged_by, u.subscribed_by FROM task_list t INNER JOIN users u ON t.user_id = u.user_id WHERE t.privacy = %s AND t.is_flagged = %s ORDER BY t.created_at DESC OFFSET %s LIMIT %s"
+    select_query = "SELECT u.username, u.firstname, u.lastname, t.list_id, t.description, t.created_at, \
+                    t.likes, t.comments, t.flagged_by, u.subscribed_by, u.profile_pic_url \
+                    FROM task_list t \
+                    INNER JOIN users u ON t.user_id = u.user_id \
+                    WHERE t.privacy = %s AND t.is_flagged = %s \
+                    ORDER BY t.created_at DESC OFFSET %s LIMIT %s"
     cursor = conn.cursor()
     affected_count = 0
 
@@ -320,6 +248,7 @@ def fetch_feed_for_user(loggedInUser):
                     "has_commented": has_commented,
                     "is_flagged": hasUserFlaggedThePost,
                     "has_subscribed": hasUserSubscribedThisCreator,
+                    "profile_pic_url_creator": item[10],
                 }
             )
 
@@ -330,14 +259,15 @@ def fetch_feed_for_user(loggedInUser):
 
 
 @product.route("/feed/upsert", methods=["POST"])
-def submit_or_update_user_task(loggedInUser):
+@get_request_context
+def submit_or_update_user_post(loggedInUser):
 
     post_request = request.get_json(force=True)
 
     # conn = mysql.connect()
     cursor = conn.cursor()
     affected_count = 0
-    user_id = post_request["user_id"]
+    user_id = loggedInUser["user_id"]
     description = post_request["item"]
     list_id = post_request.get("id")
     privacy = post_request.get("privacy_status")
@@ -440,10 +370,11 @@ def submit_or_update_user_task(loggedInUser):
 
 
 @product.route("/my/feed", methods=["DELETE"])
-def delete_user_list_item():
+@get_request_context
+def delete_user_list_item(loggedInUser):
 
     post_request = request.get_json(force=True)
-    user_id = post_request["user_id"]
+    user_id = loggedInUser["user_id"]
     list_id = post_request.get("id")
     list_ids = post_request.get("list_ids")
 
@@ -505,10 +436,11 @@ def delete_user_list_item():
 
 
 @product.route("/feed/status", methods=["PUT"])
-def update_user_task_status():
+@get_request_context
+def update_user_task_status(loggedInUser):
 
     post_request = request.get_json(force=True)
-    user_id = post_request["user_id"]
+    user_id = loggedInUser["user_id"]
     list_id = post_request["list_id"]
     clicked_event_type = post_request["update_status_event"]
     has_deleted_comment = post_request.get("has_deleted_comment")
@@ -711,10 +643,11 @@ def update_user_task_status():
 
 
 @product.route("/public/comments", methods=["PUT"])
-def insert_or_update_comments():
+@get_request_context
+def insert_or_update_comments(loggedInUser):
 
     post_request = request.get_json(force=True)
-    user_id = int(post_request["user_id"])
+    user_id = loggedInUser["user_id"]
     list_id = post_request["list_id"]
     comment = post_request.get("comment_text")
     is_flagged = post_request.get("is_flagged")
@@ -900,10 +833,11 @@ def insert_or_update_comments():
 
 
 @product.route("/comments", methods=["DELETE"])
-def delete_comments_for_user():
+@get_request_context
+def delete_comments_for_user(loggedInUser):
 
     post_request = request.get_json(force=True)
-    user_id = post_request["user_id"]
+    user_id = loggedInUser["user_id"]
     list_id = post_request["list_id"]
     comment_id = post_request["comment_id"]
 
@@ -962,9 +896,10 @@ def delete_comments_for_user():
 
 
 @product.route("/comments", methods=["GET"])
-def fetch_comments_for_user():
+@get_request_context
+def fetch_comments_for_user(loggedInUser):
 
-    user_id = int(request.args.get("user_id"))
+    user_id = loggedInUser["user_id"]
     list_id = request.args.get("list_id")
     cursor = conn.cursor()
     affected_count = 0
@@ -1035,10 +970,11 @@ def fetch_comments_for_user():
 
 
 @product.route("/feed/flag", methods=["POST"])
-def flag_or_report_feed_by_user():
+@get_request_context
+def flag_or_report_feed_by_user(loggedInUser):
 
     post_request = request.get_json(force=True)
-    user_id = post_request["user_id"]
+    user_id = loggedInUser["user_id"]
     list_id = post_request["list_id"]
     response = {}
     cursor = conn.cursor()
