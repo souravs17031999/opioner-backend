@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.feed_tracking_comments (
     comment_id integer DEFAULT nextval(
         'public.feed_tracking_comments_comment_id_seq'::regclass
     ) NOT NULL,
-    user_id integer NOT NULL,
+    user_id text NOT NULL,
     list_id integer NOT NULL,
     comment_description text NOT NULL,
     likes_on_comments integer DEFAULT 0,
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS public.feed_tracking_comments (
     is_flagged smallint DEFAULT 0,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     flag_on_comments integer DEFAULT 0,
-    flagged_by integer [] DEFAULT ARRAY []::integer []
+    flagged_by TEXT [] DEFAULT ARRAY []::TEXT []
 );
 ALTER TABLE public.feed_tracking_comments OWNER TO postgres;
 --
@@ -48,7 +48,7 @@ ALTER TABLE public.feed_tracking_comments OWNER TO postgres;
 --
 CREATE TABLE IF NOT EXISTS public.task_list (
     list_id integer NOT NULL,
-    user_id integer NOT NULL,
+    user_id text NOT NULL,
     description text NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     privacy text DEFAULT 'private'::text,
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS public.task_list (
     has_liked smallint DEFAULT 0,
     has_commented smallint DEFAULT 0,
     is_flagged smallint DEFAULT 0,
-    flagged_by integer [] DEFAULT ARRAY []::integer [],
+    flagged_by TEXT [] DEFAULT ARRAY []::TEXT [],
     flags_on_feed integer DEFAULT 0
 );
 ALTER TABLE public.task_list OWNER TO postgres;
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS public.feed_tracking_user_status (
     id integer DEFAULT nextval(
         'public.feed_tracking_user_status_id_seq'::regclass
     ) NOT NULL,
-    user_id integer NOT NULL,
+    user_id text NOT NULL,
     list_id integer NOT NULL,
     liked smallint DEFAULT 0 NOT NULL,
     commented smallint DEFAULT 0 NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS public.user_notifications (
     id integer DEFAULT nextval('public.user_notifications_id_seq'::regclass) NOT NULL,
     event_type text,
     description text NOT NULL,
-    user_id integer NOT NULL,
+    user_id text NOT NULL,
     read_flag smallint DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
@@ -110,16 +110,15 @@ ALTER TABLE public.user_notifications OWNER TO postgres;
 -- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 CREATE TABLE IF NOT EXISTS public.users (
-    user_id integer NOT NULL,
+    user_id text NOT NULL,
     username text NOT NULL,
-    password character varying(100),
     firstname text,
     lastname text,
     email text,
-    phone text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     subscriber_count integer DEFAULT 0,
-    subscribed_by integer [] DEFAULT ARRAY []::integer []
+    subscribed_by TEXT [] DEFAULT ARRAY []::TEXT [],
+    profile_pic_url text
 );
 ALTER TABLE public.users OWNER TO postgres;
 --
@@ -128,7 +127,7 @@ ALTER TABLE public.users OWNER TO postgres;
 CREATE SEQUENCE IF NOT EXISTS public.login_sessions_user_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 CREATE TABLE IF NOT EXISTS public.login_sessions (
-    user_id integer DEFAULT nextval('public.login_sessions_user_id_seq'::regclass) NOT NULL,
+    user_id text DEFAULT nextval('public.login_sessions_user_id_seq'::regclass) NOT NULL,
     origin text,
     user_agent text,
     host text,

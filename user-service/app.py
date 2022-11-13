@@ -1,4 +1,4 @@
-from flask import Flask, json, jsonify, request, Response, Blueprint
+from flask import Flask, json, jsonify, request, Response, Blueprint, g
 from werkzeug.datastructures import Headers
 import jwt
 from functools import wraps
@@ -75,6 +75,16 @@ def authorize_request(headers):
             }), 401
     
     print("Request is Authorized")
+    # set user data in request context 
+    g.loggedInUserData = {
+        "user_id": payload["sub"],
+        "username": payload["preferred_username"],
+        "fullname": payload["name"],
+        "email": payload["email"],
+        "firstname": payload["given_name"],
+        "lastname": payload["family_name"]
+    }
+    print(g.loggedInUserData)
 
 def decode_auth_token(auth_token):
     """
