@@ -4,10 +4,13 @@ from functools import wraps
 import os
 import psycopg2
 import subprocess
+from utils.log_util import get_logger
 
 app = Flask(__name__)
 
 product = Blueprint("product", __name__)
+logger = get_logger(__name__)
+
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
 if os.getenv("DATABASE_URL") != "":
     DATABASE_URL = os.getenv("DATABASE_URL")
@@ -34,7 +37,7 @@ def health_check_product_service():
         if subprocess_output.returncode != 0:
             POSTGRES_SUCCESS = False
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     return jsonify({
         "status" : "success", 
@@ -66,17 +69,17 @@ def fetch_user_list(loggedInUser):
         cursor.execute(fetchQuery, (loggedInUser["user_id"],))
         affected_count = cursor.rowcount
         db_list_data = cursor.fetchall()
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         conn.commit()
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         cursor.close()
 
-    print("DB DATA : ", db_list_data)
-    print("----------------------------------------------------")
+    logger.info("DB DATA : %s", db_list_data)
+    logger.info("----------------------------------------------------")
 
     response = {}
 
@@ -136,19 +139,19 @@ def fetch_feed_for_user(loggedInUser):
         )
         affected_count = cursor.rowcount
         db_data_feeds = cursor.fetchall()
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         conn.commit()
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         if affected_count == 0:
             cursor.close()
 
-    print("DB DATA : ", db_data_feeds)
+    logger.info("DB DATA : %s", db_data_feeds)
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     response = {}
     lists = []
@@ -172,21 +175,21 @@ def fetch_feed_for_user(loggedInUser):
             cursor.execute(select_events_likes_for_user, (user_id,))
             affected_count = cursor.rowcount
             db_data_likes_ids = cursor.fetchall()
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
             conn.commit()
         except Exception as e:
-            print(e)
+            logger.info(e)
 
         try:
             cursor.execute(select_comments_likes_for_user, (user_id,))
             affected_count = cursor.rowcount
             db_data_comments_ids = cursor.fetchall()
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
             conn.commit()
         except Exception as e:
-            print(e)
+            logger.info(e)
 
         # get all the feeds which user has liked but not created by itself
         select_all_events_likes_for_user = "SELECT list_id FROM feed_tracking_user_status WHERE user_id = %s AND liked = 1"
@@ -195,16 +198,16 @@ def fetch_feed_for_user(loggedInUser):
             cursor.execute(select_all_events_likes_for_user, (user_id,))
             affected_count = cursor.rowcount
             db_data_all_likes_ids = cursor.fetchall()
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
             conn.commit()
         except Exception as e:
-            print(e)
+            logger.info(e)
 
         for i in db_data_all_likes_ids:
             db_data_likes_ids.append(i)
 
-        print("[debug]: likes ids: ", db_data_likes_ids)
+        logger.info("[debug]: likes ids: %s", db_data_likes_ids)
         start_param_for_page = 1
         if page is not None and size is not None:
             start_param_for_page = skip + 1
@@ -296,14 +299,14 @@ def submit_or_update_user_post(loggedInUser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print("----------------------------------------------------")
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info("----------------------------------------------------")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
             db_data = cursor.fetchone()
-            print("db_data: ", db_data)
+            logger.info("db_data: %s", db_data)
 
         except Exception as e:
-            print(e)
+            logger.info(e)
         finally:
             selectQuery = (
                 "SELECT * FROM task_list WHERE user_id = %s AND description = %s"
@@ -312,10 +315,10 @@ def submit_or_update_user_post(loggedInUser):
             affected_count = cursor.rowcount
             db_data = cursor.fetchone()
 
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
-            print("db_data: ", db_data)
-            print("----------------------------------------------------")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
+            logger.info("db_data: %s", db_data)
+            logger.info("----------------------------------------------------")
 
             cursor.close()
 
@@ -346,14 +349,14 @@ def submit_or_update_user_post(loggedInUser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print("----------------------------------------------------")
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info("----------------------------------------------------")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
             db_data = cursor.fetchone()
-            print("db_data: ", db_data)
+            logger.info("db_data: %s", db_data)
 
         except Exception as e:
-            print(e)
+            logger.info(e)
         finally:
             cursor.close()
 
@@ -366,7 +369,7 @@ def submit_or_update_user_post(loggedInUser):
             response["message"] = "Updation for User Feed SUCCESFULLY DONE !"
             return jsonify(response), 200
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
 
 @product.route("/my/feed", methods=["DELETE"])
@@ -394,13 +397,13 @@ def delete_user_list_item(loggedInUser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print("----------------------------------------------------")
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
-            print("----------------------------------------------------")
+            logger.info("----------------------------------------------------")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
+            logger.info("----------------------------------------------------")
 
         except Exception as e:
-            print(e)
+            logger.info(e)
         finally:
             cursor.close()
 
@@ -412,13 +415,13 @@ def delete_user_list_item(loggedInUser):
             cursor.execute(query, (user_id, list_ids))
             conn.commit()
             affected_count = cursor.rowcount
-            print("----------------------------------------------------")
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
-            print("----------------------------------------------------")
+            logger.info("----------------------------------------------------")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
+            logger.info("----------------------------------------------------")
 
         except Exception as e:
-            print(e)
+            logger.info(e)
         finally:
             cursor.close()
 
@@ -464,19 +467,19 @@ def update_user_task_status(loggedInUser):
             conn.commit()
             affected_count = cursor.rowcount
             db_data = cursor.fetchone()
-            print("DB DATA: ", db_data)
+            logger.info("DB DATA: %s", db_data)
             db_user_id = db_data[0]
             has_liked = db_data[1]
-            print("----------------------------------------------------")
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info("----------------------------------------------------")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
 
         except Exception as e:
-            print(e)
+            logger.info(e)
 
         if user_id == db_user_id:
             # when the user liking is same as who created that feed
-            print("[debug]: Called by same user for like ")
+            logger.info("[debug]: Called by same user for like ")
             updateLikeCountQuery = ""
             updateStatusQuery = ""
             if has_liked:
@@ -501,11 +504,11 @@ def update_user_task_status(loggedInUser):
                 )
                 conn.commit()
                 affected_count = cursor.rowcount
-                print(cursor.query.decode())
-                print(f"{affected_count} rows affected")
+                logger.info(cursor.query.decode())
+                logger.info(f"{affected_count} rows affected")
 
             except Exception as e:
-                print(e)
+                logger.info(e)
 
             try:
                 cursor.execute(
@@ -517,11 +520,11 @@ def update_user_task_status(loggedInUser):
                 )
                 conn.commit()
                 affected_count = cursor.rowcount
-                print(cursor.query.decode())
-                print(f"{affected_count} rows affected")
+                logger.info(cursor.query.decode())
+                logger.info(f"{affected_count} rows affected")
 
             except Exception as e:
-                print(e)
+                logger.info(e)
             finally:
                 cursor.close()
 
@@ -538,11 +541,11 @@ def update_user_task_status(loggedInUser):
                 )
                 conn.commit()
                 selected_feed_status_count = cursor.rowcount
-                print(cursor.query.decode())
-                print(f"{selected_feed_status_count} rows affected")
+                logger.info(cursor.query.decode())
+                logger.info(f"{selected_feed_status_count} rows affected")
 
             except Exception as e:
-                print(e)
+                logger.info(e)
 
             updateSTatusQuery = ()
             # if user already liked this feed
@@ -561,11 +564,11 @@ def update_user_task_status(loggedInUser):
                     )
                     conn.commit()
                     affected_count = cursor.rowcount
-                    print(cursor.query.decode())
-                    print(f"{affected_count} rows affected")
+                    logger.info(cursor.query.decode())
+                    logger.info(f"{affected_count} rows affected")
 
                 except Exception as e:
-                    print(e)
+                    logger.info(e)
 
             else:
                 # if user has not liked this feed
@@ -585,11 +588,11 @@ def update_user_task_status(loggedInUser):
                     )
                     conn.commit()
                     affected_count = cursor.rowcount
-                    print(cursor.query.decode())
-                    print(f"{affected_count} rows affected")
+                    logger.info(cursor.query.decode())
+                    logger.info(f"{affected_count} rows affected")
 
                 except Exception as e:
-                    print(e)
+                    logger.info(e)
 
             # finally update the status in task_list
             try:
@@ -599,11 +602,11 @@ def update_user_task_status(loggedInUser):
                 )
                 conn.commit()
                 affected_count = cursor.rowcount
-                print(cursor.query.decode())
-                print(f"{affected_count} rows affected")
+                logger.info(cursor.query.decode())
+                logger.info(f"{affected_count} rows affected")
 
             except Exception as e:
-                print(e)
+                logger.info(e)
             finally:
                 cursor.close()
 
@@ -620,16 +623,16 @@ def update_user_task_status(loggedInUser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
 
         except Exception as e:
-            print(e)
+            logger.info(e)
 
         finally:
             cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     response = {}
     if affected_count == 0:
@@ -671,11 +674,11 @@ def insert_or_update_comments(loggedInUser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
 
         except Exception as e:
-            print(e)
+            logger.info(e)
 
         # update the total comments
         updateSTatusQuery = (
@@ -689,11 +692,11 @@ def insert_or_update_comments(loggedInUser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
 
         except Exception as e:
-            print(e)
+            logger.info(e)
 
         # fetch select query for this newly created comment
         selectCommentQuery = "SELECT comment_id FROM feed_tracking_comments WHERE user_id = %s AND comment_description = %s"
@@ -710,11 +713,11 @@ def insert_or_update_comments(loggedInUser):
             affected_count = cursor.rowcount
             new_comment = cursor.fetchone()
             created_comment_id = new_comment[0]
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
 
         except Exception as e:
-            print(e)
+            logger.info(e)
 
         finally:
             cursor.close()
@@ -734,11 +737,11 @@ def insert_or_update_comments(loggedInUser):
                 )
                 conn.commit()
                 affected_count = cursor.rowcount
-                print(cursor.query.decode())
-                print(f"{affected_count} rows affected")
+                logger.info(cursor.query.decode())
+                logger.info(f"{affected_count} rows affected")
 
             except Exception as e:
-                print(e)
+                logger.info(e)
 
             finally:
                 cursor.close()
@@ -754,13 +757,13 @@ def insert_or_update_comments(loggedInUser):
                 )
                 affected_count = cursor.rowcount
                 comment_data = cursor.fetchone()
-                print("COMMENT_DATA: ", comment_data)
+                logger.info("COMMENT_DATA: %s", comment_data)
                 flaggedByUsersList = comment_data[0]
-                print(cursor.query.decode())
-                print(f"{affected_count} rows affected")
+                logger.info(cursor.query.decode())
+                logger.info(f"{affected_count} rows affected")
 
             except Exception as e:
-                print(e)
+                logger.info(e)
 
             # check if requested user already flagged this comment
             isCommentAlreadyFlaggedByUser = False
@@ -781,11 +784,11 @@ def insert_or_update_comments(loggedInUser):
                     )
                     conn.commit()
                     affected_count = cursor.rowcount
-                    print(cursor.query.decode())
-                    print(f"{affected_count} rows affected")
+                    logger.info(cursor.query.decode())
+                    logger.info(f"{affected_count} rows affected")
 
                 except Exception as e:
-                    print(e)
+                    logger.info(e)
 
                 finally:
                     cursor.close()
@@ -802,11 +805,11 @@ def insert_or_update_comments(loggedInUser):
                     )
                     conn.commit()
                     affected_count = cursor.rowcount
-                    print(cursor.query.decode())
-                    print(f"{affected_count} rows affected")
+                    logger.info(cursor.query.decode())
+                    logger.info(f"{affected_count} rows affected")
 
                 except Exception as e:
-                    print(e)
+                    logger.info(e)
 
                 finally:
                     cursor.close()
@@ -857,11 +860,11 @@ def delete_comments_for_user(loggedInUser):
         )
         conn.commit()
         affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
 
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     # update the total comments
     updateSTatusQuery = (
@@ -875,11 +878,11 @@ def delete_comments_for_user(loggedInUser):
         )
         conn.commit()
         affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
 
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     finally:
         cursor.close()
@@ -926,12 +929,12 @@ def fetch_comments_for_user(loggedInUser):
         conn.commit()
         affected_count = cursor.rowcount
         db_data = cursor.fetchall()
-        print("DB DATA: ", db_data)
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("DB DATA: %s", db_data)
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
 
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     finally:
         cursor.close()
@@ -992,13 +995,13 @@ def flag_or_report_feed_by_user(loggedInUser):
         )
         affected_count = cursor.rowcount
         feed_data = cursor.fetchone()
-        print(cursor.query.decode())
-        print("Feed Data: ", feed_data)
+        logger.info(cursor.query.decode())
+        logger.info("Feed Data: %s", feed_data)
         flaggedByUsersList = feed_data[0]
-        print(f"{affected_count} rows affected")
+        logger.info(f"{affected_count} rows affected")
 
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     # check if requested user already flagged this feed post
     isFeedAlreadyFlaggedByUser = False
@@ -1019,11 +1022,11 @@ def flag_or_report_feed_by_user(loggedInUser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
 
         except Exception as e:
-            print(e)
+            logger.info(e)
 
         finally:
             cursor.close()
@@ -1040,11 +1043,11 @@ def flag_or_report_feed_by_user(loggedInUser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
 
         except Exception as e:
-            print(e)
+            logger.info(e)
 
         finally:
             cursor.close()

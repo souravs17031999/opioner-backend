@@ -16,6 +16,7 @@ import string
 import requests
 import json
 import subprocess
+from utils.log_util import get_logger
 
 app = Flask(__name__)
 
@@ -29,21 +30,23 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 # mysql.init_app(app)
 
 auth = Blueprint("auth", __name__)
+logger = get_logger(__name__)
+
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
 if os.getenv("DATABASE_URL") != "":
     DATABASE_URL = os.getenv("DATABASE_URL")
 
-print("======= Connecting to Database...")
+logger.info("======= Connecting to Database...")
 conn = psycopg2.connect(DATABASE_URL)
-print(conn)
+logger.info(conn)
 REDIS_URL = f"redis://{os.getenv('REDIS_USERNAME')}:{os.getenv('REDIS_PASSWORD')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/{os.getenv('REDIS_DB')}"
 if os.getenv("REDIS_URL") != "":
     REDIS_URL = os.getenv("REDIS_URL")
 
-print("======= Connecting to Redis....", REDIS_URL)
+logger.info("======= Connecting to Redis.... %s", REDIS_URL)
 redisServer = redis.Redis.from_url(REDIS_URL)
 
-print(redisServer)
+logger.info(redisServer)
 NOTIFICATION_INTERNAL_API = os.getenv("NOTIFICATION_INTERNAL_URL")
 REDIS_CACHE_TIMEOUT = 60
 OTP_DIGITS = 6
@@ -85,7 +88,7 @@ def decode_auth_token(auth_token):
 def get_password_hash(password):
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode(), salt)
-    print("hashedpwd:", hashed)
+    logger.debug("hashedpwd: %s", hashed)
     return hashed.decode()
 
 @auth.route("/open-id/connect/token", methods=["POST"])
@@ -95,17 +98,17 @@ def return_open_id_jwt_token():
     response = {}
 
     if post_request["user-id"] is None:
-        print("[ERROR]: Unauthorized access detected for authorized Page for user !")
+        logger.info("[ERROR]: Unauthorized access detected for authorized Page for user !")
         response["status"] = "failure"
         response["message"] = "Unauthorized access detected for authorized Page for user"
         return jsonify(response), 401
 
     try:
-        print("************ JWT TOKEN GENERATION ********* ")
+        logger.info("************ JWT TOKEN GENERATION ********* ")
         userJwtToken = encode_auth_token(post_request["user-id"])
     except Exception as e:
-        print("Error in generating JWT token for userid: ", post_request["user-id"])
-        print("[ERROR]: ", e)
+        logger.info("Error in generating JWT token for userid: %s", post_request["user-id"])
+        logger.info("[ERROR]: ", e)
         response["status"] = "failure"
         response["message"] = "Error in generating JWT token for user!"
         return jsonify(response), 500
@@ -136,13 +139,13 @@ def generate_otp_for_user():
             }
         )
         redisServer.set(key_for_redis, payload, REDIS_CACHE_TIMEOUT)
-        print(
+        logger.info(
             "generating OTP for key: ",
             key_for_redis,
             ", for email: ",
             post_request["email"],
         )
-        print("payload: ", payload)
+        logger.info("payload: ", payload)
         response = {}
         emailData = {}
         emailData[
@@ -163,22 +166,22 @@ def generate_otp_for_user():
                 headers=headers,
                 timeout=10,
             )
-            print("[debug]: notification-service response: ", notifyResponse)
+            logger.info("[debug]: notification-service response: %s", notifyResponse)
             if notifyResponse.status_code != 200:
-                print("Error in sending notification email for OTP")
+                logger.info("Error in sending notification email for OTP")
 
                 response["status"] = "failure"
                 response["message"] = "Error in sending notification email for OTP"
                 return jsonify(response), 500
 
         except Exception as e:
-            print("Error in sending notification email for OTP: ", e)
+            logger.info("Error in sending notification email for OTP: ", e)
             response["status"] = "failure"
             response["message"] = "Error in sending notification email for OTP"
             return jsonify(response), 500
 
     except Exception as e:
-        print("Error in generating OTP for user: ", e)
+        logger.info("Error in generating OTP for user: ", e)
         response["status"] = "failure"
         response["message"] = "Error in generating OTP for user"
         return jsonify(response), 500
@@ -192,7 +195,7 @@ def verify_otp_for_user(userData, otp):
 
     key_for_redis = userData["email"] + userData["secret_token"]
     payload = redisServer.get(key_for_redis)
-    print("Got payload: ", payload, " for key: ", key_for_redis)
+    logger.info("Got payload: ", payload, " for key: ", key_for_redis)
     if payload is not None and json.loads(payload)["otp"] == otp:
         return True
     else:
@@ -221,18 +224,18 @@ def health_check_auth_service():
         if subprocess_output.returncode != 0:
             POSTGRES_SUCCESS = False
     except Exception as e:
-        print(e)
+        logger.info(e)
     
     try:
         if redisServer.ping() != True:
             REDIS_SUCCESS = False
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     headers = {"Content-Type": "application/json"}
     try:
-        print(
-            "[debug] Requesting to Notification service API: ",
+        logger.info(
+            "[debug] Requesting to Notification service API: %s",
             NOTIFICATION_INTERNAL_API + "/notification/status/live",
         )
         notifyResponse = requests.get(
@@ -240,12 +243,12 @@ def health_check_auth_service():
             headers=headers,
             timeout=10,
         )
-        print("[debug] notification-service status: ", notifyResponse)
-        print("[debug] notification-service response: ", notifyResponse.text)
+        logger.info("[debug] notification-service status: %s", notifyResponse)
+        logger.info("[debug] notification-service response: %s", notifyResponse.text)
         if notifyResponse.status_code != 200:
             NOTIFICATION_SERVICE_SUCCESS = False 
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     return jsonify({
         "status" : "success", 
@@ -264,16 +267,16 @@ def login_to_app():
         affected_count = cursor.rowcount
         db_data = cursor.fetchone()
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         if affected_count == 0:
             cursor.close()
 
-    print("----------------------------------------------------")
-    print(cursor.query.decode())
-    print(f"{affected_count} rows affected")
-    print("DB DATA : ", db_data)
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
+    logger.info(cursor.query.decode())
+    logger.info(f"{affected_count} rows affected")
+    logger.info("DB DATA : ", db_data)
+    logger.info("----------------------------------------------------")
     response = {}
 
     if db_data == None:
@@ -283,7 +286,7 @@ def login_to_app():
 
     else:
         loggedInUserId = db_data[0]
-        print("****** PASSWORD AUTHENTICATION STARTED *******")
+        logger.info("****** PASSWORD AUTHENTICATION STARTED *******")
         if bcrypt.checkpw(post_request["password"].encode(), db_data[2].encode()):
             # auth user request
             # token = jwt.encode({'user': post_request["username"], 'exp': datetime.datetime.utcnow(
@@ -292,7 +295,7 @@ def login_to_app():
             USER_AGENT = request.headers.get("User-Agent")
             ORIGIN = request.headers.get("Origin")
             LAST_LOGGED_IN = datetime.datetime.now()
-            print("******** Updating user session ********")
+            logger.info("******** Updating user session ********")
             userSessionUpdatequery = "UPDATE login_sessions SET host=%s, user_agent=%s, origin=%s, last_logged_in=%s, active_sessions = active_sessions + 1 WHERE user_id=%s"
             try:
                 cursor.execute(
@@ -307,18 +310,18 @@ def login_to_app():
                 )
                 conn.commit()
                 affected_count = cursor.rowcount
-                print("----------------------------------------------------")
-                print(cursor.query.decode())
-                print(f"{affected_count} rows affected")
+                logger.info("----------------------------------------------------")
+                logger.info(cursor.query.decode())
+                logger.info(f"{affected_count} rows affected")
                 db_sessions_data = cursor.fetchone()
-                print("DB DATA : ", db_sessions_data)
-                print("----------------------------------------------------")
+                logger.info("DB DATA : ", db_sessions_data)
+                logger.info("----------------------------------------------------")
             except Exception as e:
-                print(e)
+                logger.info(e)
             finally:
                 cursor.close()
 
-            print("************ JWT TOKEN APPENDING ********* ")
+            logger.info("************ JWT TOKEN APPENDING ********* ")
             userJwtToken = encode_auth_token(loggedInUserId)
             user_data = {
                 "user_id": db_data[0],
@@ -347,19 +350,19 @@ def signup_to_app(post_request):
     affected_count = 0
     try:
         cursor.execute(authSelectQuery, (post_request["username"],))
-        print("----------------------------------------------------")
+        logger.info("----------------------------------------------------")
         affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{cursor.rowcount} rows affected")
+        logger.info(cursor.query.decode())
+        logger.info(f"{cursor.rowcount} rows affected")
     except Exception as e:
-        print("ERROR in fetching user data", e)
+        logger.info("ERROR in fetching user data", e)
     finally:
         if affected_count != 0:
             cursor.close()
 
     if affected_count != 0:
-        print("FAILURE")
-        print("Chosen username already exists !")
+        logger.info("FAILURE")
+        logger.info("Chosen username already exists !")
         return False, "Chosen username already exists !"
 
     createdUserId = None
@@ -378,21 +381,21 @@ def signup_to_app(post_request):
         )
         conn.commit()
         affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{cursor.rowcount} rows affected")
+        logger.info(cursor.query.decode())
+        logger.info(f"{cursor.rowcount} rows affected")
     except Exception as e:
-        print("ERROR in inserting users: ", e)
+        logger.info("ERROR in inserting users: ", e)
         return False, "ERROR: ERROR in user creation"
     finally:
         selectQuery = "SELECT u.user_id FROM users u WHERE username = %s"
         cursor.execute(selectQuery, (post_request["username"],))
-        print(cursor.query.decode())
-        print(f"{cursor.rowcount} rows affected")
+        logger.info(cursor.query.decode())
+        logger.info(f"{cursor.rowcount} rows affected")
         db_data = cursor.fetchone()
         createdUserId = db_data[0]
-        print("DB DATA : ", db_data)
+        logger.info("DB DATA : ", db_data)
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     insertUserSessionsQuery = "INSERT INTO login_sessions(user_id, host, user_agent, origin, active_sessions, last_logged_in) VALUES(%s, %s, %s, %s, %s, %s)"
     HOST = request.headers.get("Host")
@@ -414,12 +417,12 @@ def signup_to_app(post_request):
         )
         conn.commit()
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{cursor.rowcount} rows affected")
-        print("----------------------------------------------------")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{cursor.rowcount} rows affected")
+        logger.info("----------------------------------------------------")
     except Exception as e:
-        print("ERROR in inserting user login sessions: ", e)
+        logger.error("ERROR in inserting user login sessions: %s", e)
         return False, "ERROR: ERROR in user creation"
 
     insertNotificationQuery = "INSERT INTO user_notifications(event_type, description, user_id) VALUES(%s, %s, %s)"
@@ -435,20 +438,20 @@ def signup_to_app(post_request):
         )
         conn.commit()
         affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{cursor.rowcount} rows affected")
+        logger.info(cursor.query.decode())
+        logger.info(f"{cursor.rowcount} rows affected")
     except Exception as e:
-        print("ERROR in inserting user notifications: ", e)
+        logger.error("ERROR in inserting user notifications: ", e)
         return False, "ERROR: ERROR in user creation"
     finally:
         cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
     user_data = {"user_id": createdUserId}
     if affected_count == 0:
         return False, user_data
     else:
-        print("************ JWT TOKEN APPENDING ********* ")
+        logger.info("************ JWT TOKEN APPENDING ********* ")
         userJwtToken = encode_auth_token(createdUserId)
         user_data["token"] = userJwtToken
         return True, user_data
@@ -466,14 +469,14 @@ def update_password_user():
     try:
         cursor.execute(select_query, (post_request["username"],))
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
+        logger.info("DB DATA : %s", db_data)
 
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         if affected_count == 0:
             cursor.close()
@@ -490,7 +493,7 @@ def update_password_user():
     }
 
     if not verify_otp_for_user(user_data, post_request["otp"]):
-        print("[ERROR]: OTP verification failed for user: ", post_request["email"])
+        logger.info("[ERROR]: OTP verification failed for user: %s", post_request["email"])
         response["status"] = "failure"
         response["message"] = "OTP verification failed !"
         return jsonify(response), 403
@@ -508,17 +511,17 @@ def update_password_user():
         )
         conn.commit()
         affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
+        logger.info("DB DATA : %s", db_data)
 
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     if affected_count == 0:
         response["status"] = "failure"
@@ -550,16 +553,16 @@ def logout_from_app():
         affected_count = cursor.rowcount
         db_data = cursor.fetchone()
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         if affected_count == 0:
             cursor.close()
 
-    print("----------------------------------------------------")
-    print(cursor.query.decode())
-    print(f"{affected_count} rows affected")
-    print("DB DATA : ", db_data)
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
+    logger.info(cursor.query.decode())
+    logger.info(f"{affected_count} rows affected")
+    logger.info("DB DATA : %s", db_data)
+    logger.info("----------------------------------------------------")
     response = {}
 
     if db_data == None:
@@ -573,7 +576,7 @@ def logout_from_app():
         USER_AGENT = request.headers.get("User-Agent")
         ORIGIN = request.headers.get("Origin")
         LAST_LOGGED_OUT = datetime.datetime.now()
-        print("******** Logging out user now ********")
+        logger.info("******** Logging out user now ********")
         userSessionUpdatequery = "UPDATE login_sessions SET host=%s, user_agent=%s, origin=%s, last_logged_out=%s, active_sessions = active_sessions - 1 WHERE user_id=%s"
         try:
             cursor.execute(
@@ -588,12 +591,12 @@ def logout_from_app():
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print("----------------------------------------------------")
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
-            print("----------------------------------------------------")
+            logger.info("----------------------------------------------------")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
+            logger.info("----------------------------------------------------")
         except Exception as e:
-            print(e)
+            logger.info(e)
         finally:
             cursor.close()
 
@@ -618,11 +621,11 @@ def generate_OTP_signup():
     try:
         cursor.execute(authSelectQuery, (post_request["email"],))
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     response = {}
     if affected_count != 0:
@@ -636,14 +639,14 @@ def generate_OTP_signup():
     try:
         cursor.execute(usernameSelectQuery, (post_request["username"],))
         affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
     if affected_count != 0:
         response["status"] = "failure"
         response[
@@ -674,15 +677,15 @@ def generate_OTP_signup():
             }
         )
         redisServer.set(key_for_redis, payload, REDIS_CACHE_TIMEOUT)
-        print(
-            "generating OTP for key: ",
+        logger.info(
+            "generating OTP for key: %s",
             key_for_redis,
-            ", for email: ",
+            ", for email: %s",
             post_request["email"],
         )
-        print("payload: ", payload)
+        logger.info("payload: %s", payload)
     except Exception as e:
-        print("Error: ", e)
+        logger.error("Error: %s", e)
         errorFlagOTP = True
 
     emailData = {}
@@ -698,25 +701,25 @@ def generate_OTP_signup():
     }
     headers = {"Content-Type": "application/json"}
     try:
-        print(
-            "[debug] Requesting to Notification service API: ",
+        logger.info(
+            "[debug] Requesting to Notification service API: %s",
             NOTIFICATION_INTERNAL_API + "/notification/send/email",
         )
-        print("[debug] request body: ", apiData)
+        logger.info("[debug] request body: ", apiData)
         notifyResponse = requests.post(
             NOTIFICATION_INTERNAL_API + "/notification/send/email",
             data=json.dumps(apiData),
             headers=headers,
             timeout=10,
         )
-        print("[debug] notification-service status: ", notifyResponse)
-        print("[debug] notification-service response: ", notifyResponse.text)
+        logger.info("[debug] notification-service status: %s", notifyResponse)
+        logger.info("[debug] notification-service response: %s", notifyResponse.text)
         if notifyResponse.status_code != 200:
             errorFlagEmail = True
-        print("============================")
+        logger.info("============================")
 
     except Exception as e:
-        print(e)
+        logger.info(e)
         errorFlagEmail = True
 
     if errorFlagEmail:
@@ -745,7 +748,7 @@ def verify_OTP_signup():
     response = {}
     try:
         user_signup_payload = redisServer.get(key_for_redis)
-        print("Got payload: ", user_signup_payload, " for key: ", key_for_redis)
+        logger.info("Got payload: %s", user_signup_payload, " for key: ", key_for_redis)
         if (
             user_signup_payload is not None
             and json.loads(user_signup_payload)["otp"] == userOTP
@@ -775,7 +778,7 @@ def verify_OTP_signup():
             response["message"] = "OTP verification failed !"
 
     except Exception as e:
-        print("ERROR: ", e)
+        logger.error("ERROR: %s", e)
         response["status"] = "failure"
         response["verified_status"] = False
         response["message"] = "OTP verification failed !"
@@ -794,7 +797,7 @@ def login_to_app_via_social(post_request, user_data):
     ORIGIN = request.headers.get("Origin")
     LAST_LOGGED_IN = datetime.datetime.now()
     loggedInUserId = user_data[0]
-    print("******** Updating user session ********")
+    logger.info("******** Updating user session ********")
     userSessionUpdatequery = "UPDATE login_sessions SET host=%s, user_agent=%s, origin=%s, last_logged_in=%s, active_sessions = active_sessions + 1 WHERE user_id=%s"
     try:
         cursor.execute(
@@ -809,12 +812,12 @@ def login_to_app_via_social(post_request, user_data):
         )
         conn.commit()
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
-        print("----------------------------------------------------")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
     except Exception as e:
-        print(
+        logger.info(
             f"Error logging in user via {post_request['action_event_source']} signin: ",
             e,
         )
@@ -825,7 +828,7 @@ def login_to_app_via_social(post_request, user_data):
     finally:
         cursor.close()
     
-    print("************ JWT TOKEN APPENDING ********* ")
+    logger.info("************ JWT TOKEN APPENDING ********* ")
     userJwtToken = encode_auth_token(loggedInUserId)
     user_data = {
         "user_id": user_data[0],
@@ -862,10 +865,10 @@ def signup_to_app_via_social(post_request):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print(cursor.query.decode())
-            print(f"{cursor.rowcount} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{cursor.rowcount} rows affected")
         except Exception as e:
-            print("ERROR in inserting users for google signin: ", e)
+            logger.error("ERROR in inserting users for google signin: %s", e)
             return False, "ERROR: ERROR in user creation for google signin user"
 
     elif post_request["action_event_source"] == "facebook":
@@ -888,21 +891,21 @@ def signup_to_app_via_social(post_request):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print(cursor.query.decode())
-            print(f"{cursor.rowcount} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{cursor.rowcount} rows affected")
         except Exception as e:
-            print("ERROR in inserting users for facebook signin: ", e)
+            logger.error("ERROR in inserting users for facebook signin: %s", e)
             return False, "ERROR: ERROR in user creation for facebook signin user"
 
     selectQuery = "SELECT u.user_id FROM users u WHERE email = %s"
     cursor.execute(selectQuery, (post_request["email"],))
-    print(cursor.query.decode())
-    print(f"{cursor.rowcount} rows affected")
+    logger.info(cursor.query.decode())
+    logger.info(f"{cursor.rowcount} rows affected")
     db_data = cursor.fetchone()
     createdUserId = db_data[0]
-    print("DB DATA : ", db_data)
+    logger.info("DB DATA : %s", db_data)
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     insertUserSessionsQuery = "INSERT INTO login_sessions(user_id, host, user_agent, origin, active_sessions, last_logged_in) VALUES(%s, %s, %s, %s, %s, %s)"
     HOST = request.headers.get("Host")
@@ -924,12 +927,12 @@ def signup_to_app_via_social(post_request):
         )
         conn.commit()
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{cursor.rowcount} rows affected")
-        print("----------------------------------------------------")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{cursor.rowcount} rows affected")
+        logger.info("----------------------------------------------------")
     except Exception as e:
-        print("ERROR in inserting user login sessions: ", e)
+        logger.error("ERROR in inserting user login sessions: %s", e)
         return False, "ERROR: ERROR in user creation"
 
     insertNotificationQuery = "INSERT INTO user_notifications(event_type, description, user_id) VALUES(%s, %s, %s)"
@@ -945,16 +948,16 @@ def signup_to_app_via_social(post_request):
         )
         conn.commit()
         affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{cursor.rowcount} rows affected")
+        logger.info(cursor.query.decode())
+        logger.info(f"{cursor.rowcount} rows affected")
     except Exception as e:
-        print("ERROR in inserting user notifications: ", e)
+        logger.error("ERROR in inserting user notifications: %s", e)
         return False, "ERROR: ERROR in user creation"
     finally:
         cursor.close()
 
-    print("----------------------------------------------------")
-    print("************ JWT TOKEN APPENDING ********* ")
+    logger.info("----------------------------------------------------")
+    logger.info("************ JWT TOKEN APPENDING ********* ")
     userJwtToken = encode_auth_token(createdUserId)
     user_data = {"user_id": createdUserId, "token": userJwtToken}
     if affected_count == 0:
@@ -976,7 +979,7 @@ def verify_social_sign_up():
     user_data = None
 
     if post_request.get("email") is None:
-        print("[Warning]: Email not found in request API")
+        logger.info("[Warning]: Email not found in request API")
         response["status"] = "failure"
         response["verified_status"] = False
         response["message"] = "Email not found in request API"
@@ -984,13 +987,13 @@ def verify_social_sign_up():
 
     try:
         cursor.execute(authSelectQuery, (post_request["email"],))
-        print("----------------------------------------------------")
+        logger.info("----------------------------------------------------")
         affected_count = cursor.rowcount
         user_data = cursor.fetchone()
-        print(cursor.query.decode())
-        print(f"{cursor.rowcount} rows affected")
+        logger.info(cursor.query.decode())
+        logger.info(f"{cursor.rowcount} rows affected")
     except Exception as e:
-        print("ERROR in fetching user data", e)
+        logger.error("ERROR in fetching user data: %s", e)
         response["status"] = "failure"
         response["verified_status"] = False
         response[
@@ -1036,11 +1039,11 @@ def verify_social_sign_up():
         if (is_google_verified and post_request["action_event_source"] == "google") or (
             is_facebook_verified and post_request["action_event_source"] == "facebook"
         ):
-            print("[debug]: User already found, logging in user ....")
+            logger.info("[debug]: User already found, logging in user ....")
             userResponse = login_to_app_via_social(post_request_for_social, user_data)
             action = "LOGIN"
     elif affected_count == 0:
-        print("[debug]: User not found, signing up the user ....")
+        logger.info("[debug]: User not found, signing up the user ....")
         userResponse = signup_to_app_via_social(post_request_for_social)
         action = "SIGNUP"
 

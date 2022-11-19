@@ -22,6 +22,7 @@ services:
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
       - REQUIRE_DB_MIGRATIONS
+      - LOG_LEVEL
       - PORT=8081
       - DATABASE_URL
       - REDIS_DB
@@ -51,6 +52,7 @@ services:
       - PGDATABASE
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
+      - LOG_LEVEL
       - PORT=8082
       - DATABASE_URL
       - OIDC_CONFIG
@@ -75,6 +77,7 @@ services:
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
       - PORT=8083
+      - LOG_LEVEL
       - DATABASE_URL
       - OIDC_CONFIG
     volumes:
@@ -98,6 +101,7 @@ services:
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
       - SENDGRID_API_KEY_PROD
+      - LOG_LEVEL
       - PORT=8084
       - DATABASE_URL
       - OIDC_CONFIG
@@ -123,6 +127,7 @@ services:
       - TEST_JENKINS_BUILD
       - SENDGRID_API_KEY_PROD
       - PORT=8085
+      - LOG_LEVEL
       - DATABASE_URL
       - OIDC_CONFIG
       - CRON_TIME_FLAGGED_COMMENTS_MINUTES=30

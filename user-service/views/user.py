@@ -11,6 +11,7 @@ import pyrebase
 import psycopg2
 import subprocess
 import json
+from utils.log_util import get_logger
 
 app = Flask(__name__)
 
@@ -24,6 +25,8 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 # mysql.init_app(app)
 
 user = Blueprint("user", __name__)
+
+logger = get_logger(__name__)
 
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
 if os.getenv("DATABASE_URL") != "":
@@ -60,7 +63,7 @@ def health_check_user_service():
         if subprocess_output.returncode != 0:
             POSTGRES_SUCCESS = False
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     return jsonify({
         "status" : "success", 
@@ -80,15 +83,15 @@ def get_all_current_users(loggedInUser):
         cursor.execute(query)
         affected_count = cursor.rowcount
         db_data = cursor.fetchall()
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     users_data = []
     for item in db_data:
@@ -124,16 +127,16 @@ def upsert_user_data(loggedInUser):
 
         cursor.execute(selectUserQuery, (user_id,))
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print("Check if user already exists ...")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info("Check if user already exists ...")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         db_data = cursor.fetchone()
-        print("db_data: ", db_data)
+        logger.info("db_data: %s", db_data)
 
         if affected_count == 0:
 
-            print("User doesn't exists ! Creating new user .....")
+            logger.info("User doesn't exists ! Creating new user .....")
             insertUserQuery = "INSERT INTO users(user_id, username, firstname, lastname, email, profile_pic_url) VALUES(%s, %s, %s, %s, %s, %s)"
             cursor.execute(
                 insertUserQuery,
@@ -148,18 +151,18 @@ def upsert_user_data(loggedInUser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
         else:
-            print("User already exists ..., skip creation of new entity")
+            logger.info("User already exists ..., skip creation of new entity")
 
 
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     response = {}
     response["status"] = "success"
@@ -182,17 +185,17 @@ def fetch_user_status_auth(loggedInUser):
     try:
         cursor.execute(query, (post_request["username"],))
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         user_data = cursor.fetchone()
-        print("DB DATA : ", user_data)
+        logger.info("DB DATA : %s", user_data)
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     response = {}
     if affected_count == 0:
@@ -225,13 +228,13 @@ def subscribe_user(loggedInuser):
     try:
         cursor.execute(subscribedByUserFetchQuery, (list_id,))
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         db_user_data = cursor.fetchone()
-        print("DB DATA : ", db_user_data)
+        logger.info("DB DATA : %s", db_user_data)
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     response = {}
     if affected_count == 0:
@@ -249,14 +252,14 @@ def subscribe_user(loggedInuser):
     try:
         cursor.execute(selectUserSubscriberListFetchQuery, (subscribedForUserId,))
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         db_data = cursor.fetchone()
         subscribedByUsersList = db_data[0]
-        print("DB DATA : ", db_data)
+        logger.info("DB DATA : %s", db_data)
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     # check if user already subscribes for this creator
     ifUserAlreadySubscribed = False
@@ -278,13 +281,13 @@ def subscribe_user(loggedInuser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print("----------------------------------------------------")
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info("----------------------------------------------------")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
             db_data = cursor.fetchone()
-            print("DB DATA : ", db_data)
+            logger.info("DB DATA : %s", db_data)
         except Exception as e:
-            print(e)
+            logger.info(e)
         finally:
             cursor.close()
 
@@ -301,13 +304,13 @@ def subscribe_user(loggedInuser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print("----------------------------------------------------")
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info("----------------------------------------------------")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
             db_data = cursor.fetchone()
-            print("DB DATA : ", db_data)
+            logger.info("DB DATA : %s", db_data)
         except Exception as e:
-            print(e)
+            logger.info(e)
         finally:
             updateUserEmailquery = "UPDATE users SET email = %s WHERE user_id = %s"
             cursor.execute(
@@ -319,11 +322,11 @@ def subscribe_user(loggedInuser):
             )
             conn.commit()
             affected_count = cursor.rowcount
-            print(cursor.query.decode())
-            print(f"{affected_count} rows affected")
+            logger.info(cursor.query.decode())
+            logger.info(f"{affected_count} rows affected")
             cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     if affected_count == 0:
         response["status"] = "failure"
@@ -358,22 +361,22 @@ def delete_user_data(loggedInUser):
         cursor.execute(deleteUserDataQuery, (loggedInUser["user_id"],))
         conn.commit()
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     deleteSessionsDataQuery = "DELETE FROM login_sessions ls WHERE ls.user_id = %s"
     try:
         cursor.execute(deleteSessionsDataQuery, (loggedInUser["user_id"],))
         conn.commit()
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     deleteNotificationsDataQuery = (
         "DELETE FROM user_notifications un WHERE un.user_id = %s"
@@ -382,15 +385,15 @@ def delete_user_data(loggedInUser):
         cursor.execute(deleteNotificationsDataQuery, (loggedInUser["user_id"],))
         conn.commit()
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     response = {}
     if affected_count == 0:
