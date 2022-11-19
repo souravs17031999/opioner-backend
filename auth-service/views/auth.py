@@ -212,12 +212,11 @@ def liveness_check_auth_service():
 @auth.route("/status/health", methods=["GET", "POST"])
 def health_check_auth_service():
 
-    POSTGRES_SUCCESS, APP_SUCCESS, REDIS_SUCCESS, NOTIFICATION_SERVICE_SUCCESS = True, True, True, True
+    POSTGRES_SUCCESS, APP_SUCCESS, REDIS_SUCCESS = True, True, True
     components_check = [
         {"postgresDB": POSTGRES_SUCCESS},
         {"application": APP_SUCCESS}, 
-        {"redis": REDIS_SUCCESS}, 
-        {"notification_service": NOTIFICATION_SERVICE_SUCCESS}
+        {"redis": REDIS_SUCCESS}
     ]
     try:
         subprocess_output = subprocess.run(["pg_isready", "-h", f"{os.getenv('PGHOST')}"])
@@ -229,24 +228,6 @@ def health_check_auth_service():
     try:
         if redisServer.ping() != True:
             REDIS_SUCCESS = False
-    except Exception as e:
-        logger.info(e)
-
-    headers = {"Content-Type": "application/json"}
-    try:
-        logger.info(
-            "[debug] Requesting to Notification service API: %s",
-            NOTIFICATION_INTERNAL_API + "/notification/status/live",
-        )
-        notifyResponse = requests.get(
-            NOTIFICATION_INTERNAL_API + "/notification/status/live",
-            headers=headers,
-            timeout=10,
-        )
-        logger.info("[debug] notification-service status: %s", notifyResponse)
-        logger.info("[debug] notification-service response: %s", notifyResponse.text)
-        if notifyResponse.status_code != 200:
-            NOTIFICATION_SERVICE_SUCCESS = False 
     except Exception as e:
         logger.info(e)
 

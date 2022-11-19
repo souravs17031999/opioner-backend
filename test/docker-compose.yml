@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3"
 services:
   apitest:
     build:
@@ -20,5 +20,6 @@ services:
       - USERSERVICEHOST=http://user_service:8082/user
       - PRODUCTSERVICEHOST=http://product_service:8083/product
       - NOTIFICATIONSERVICEHOST=http://notification_service:8084/notification
+      - KEYCLOAK_SERVER_URL=https://keycloak-opioner.herokuapp.com/auth
       - TEST_SUITE_DIR
       - HEROKU_API_KEY

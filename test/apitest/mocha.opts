@@ -1,6 +1,7 @@
 test.js
 -R spec
--ui bdd
+--ui bdd
 --recursive
 -- bail
 --exit 
+-t 30000

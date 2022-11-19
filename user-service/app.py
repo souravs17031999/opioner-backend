@@ -116,8 +116,9 @@ def decode_auth_token(auth_token):
     except jwt.InvalidSignatureError:
         logger.error('Signature verification failed. Please log in again.')
         return SIGNATURE_VERIFICATION_FAILED
-    except jwt.InvalidTokenError:
+    except Exception as e:
         logger.error('Invalid token. Please log in again.')
+        logger.error('Error: %s', e)
         return INVALID_TOKEN
 
 def get_public_key_server():
