@@ -4,26 +4,27 @@ from werkzeug.datastructures import Headers
 import jwt
 from functools import wraps
 import os
+from utils.log_util import get_logger
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
 app.register_blueprint(auth, url_prefix='/auth')
-
+logger = get_logger(__name__)
 
 @app.before_request
 def before_request_func():
-    print("\n***********************************************")
-    print("REQUEST METHOD: ", request.method)
-    print("REQUEST HEADERS: ", request.headers)
+    logger.info("\n***********************************************")
+    logger.info("REQUEST METHOD: ", request.method)
+    logger.info("REQUEST HEADERS: ", request.headers)
     if 'Authorization' in request.headers:
-        print("Authorized token found in request: ", request.headers['Authorization'])
+        logger.warning("Authorized token found in request: ", request.headers['Authorization'])
 
     if request.method == "GET":
-        print("REQUEST PARAMS: ", request.args)
+        logger.info("REQUEST PARAMS: ", request.args)
     elif request.method == "POST":
-        print("REQUEST PARAMS: ", request.data)
-        print("REQUESTED FILES: ", request.files)
+        logger.info("REQUEST PARAMS: ", request.data)
+        logger.info("REQUESTED FILES: ", request.files)
 
 
 @app.after_request
@@ -36,8 +37,8 @@ def after_request(response):
     header['Access-Control-Allow-Methods'] = '*'
     header['Access-Control-Allow-Credentials'] = "true"
 
-    print("RESPONSE STATUS: ", response.status)
-    print("RESPONSE HEADERS: ", response.headers)
-    print("RESPONSE BODY: ")
-    print(response.data, "\n")
+    logger.info("RESPONSE STATUS: ", response.status)
+    logger.info("RESPONSE HEADERS: ", response.headers)
+    logger.info("RESPONSE BODY: ")
+    logger.debug(response.data)
     return response

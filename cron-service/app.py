@@ -5,7 +5,7 @@ import json
 import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-
+from utils.log_util import get_logger
 import logging
 
 logging.basicConfig()
@@ -18,6 +18,8 @@ import psycopg2
 import pytz
 
 app = Flask(__name__)
+logger = get_logger(__name__)
+
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
 if os.getenv("DATABASE_URL") != "":
     DATABASE_URL = os.getenv("DATABASE_URL")
@@ -49,7 +51,7 @@ SIGNATURE_VERIFICATION_FAILED = "SIGNATURE_VERIFICATION_FAILED"
 cron_schedular = BlockingScheduler(timezone="Asia/Kolkata")
 
 # generate and execute template for sending mails with dynamic vars
-print("Initializing CRON Schedular.... ")
+logger.info("Initializing CRON Schedular.... ")
 
 
 def generate_mail_content(template_name, **template_vars):
@@ -66,9 +68,9 @@ def send_mail(emailData, template_name):
     subject = emailData["subject"]
     receiver_email = emailData["user_email"]
 
-    print("SENDER EMAIL : ", sender_email)
-    print("RECEIVER EMAIL : ", receiver_email)
-    print("Subject: ", subject)
+    logger.info("SENDER EMAIL : %s", sender_email)
+    logger.info("RECEIVER EMAIL : %s", receiver_email)
+    logger.info("Subject: %s", subject)
 
     mail_body = generate_mail_content(template_name, emailData=emailData)
 
@@ -83,11 +85,11 @@ def send_mail(emailData, template_name):
         sendgridAPIClientKey = SENDGRID_API_KEY_PROD
         sg = SendGridAPIClient(sendgridAPIClientKey)
         response = sg.send(message)
-        print(response.status_code)
+        logger.info(response.status_code)
     except Exception as e:
-        print(e)
-        print("failure !")
-        print(
+        logger.info(e)
+        logger.info("failure !")
+        logger.info(
             "status: failure, message: Email for newly created feeds sending failed !"
         )
 
@@ -96,10 +98,10 @@ def send_mail(emailData, template_name):
 @cron_schedular.scheduled_job(trigger="cron", hour=CRON_TIME_DAILY_FEED_EXP_HR, minute=CRON_TIME_DAILY_FEED_EXP_MIN, second=CRON_TIME_DAILY_FEED_EXP_SEC)
 def send_new_feeds_notification_for_creators():
 
-    print(
+    logger.info(
         "*********************** CRON for sending notifications for newly created feeds ********************"
     )
-    print("CRON TIME (UTC): ", datetime.datetime.utcnow())
+    logger.info("CRON TIME (UTC): %s", datetime.datetime.utcnow())
     # conn = mysql.connect()
     cursor = conn.cursor()
     feedFetchQuery = "SELECT t.user_id, t.description, t.created_at, t.likes, t.comments, u.subscribed_by, u.username, u.firstname FROM task_list t \
@@ -108,17 +110,17 @@ def send_new_feeds_notification_for_creators():
     WHERE DATE_PART('day', NOW() - t.created_at) = 0 AND privacy = 'public' AND is_flagged = 0 AND u.subscriber_count > 0"
     cursor.execute(feedFetchQuery)
     feeds = cursor.fetchall()
-    print("----------------------------------------------------")
-    print(cursor.query.decode())
+    logger.info("----------------------------------------------------")
+    logger.info(cursor.query.decode())
     affected_count = cursor.rowcount
-    print(f"{affected_count} rows affected")
-    print("DB DATA : ", feeds)
-    print("----------------------------------------------------")
+    logger.info(f"{affected_count} rows affected")
+    logger.info("DB DATA : %s", feeds)
+    logger.info("----------------------------------------------------")
 
     tz_NY = pytz.timezone("Asia/Kolkata")
     datetime_NY = datetime.datetime.now(tz_NY)
-    print("DATE FOR SENDING MAILS: ", datetime_NY.strftime("%A, %d %B %Y %I:%M%p"))
-    print("----------------------------------------------------")
+    logger.info("DATE FOR SENDING MAILS: %s", datetime_NY.strftime("%A, %d %B %Y %I:%M%p"))
+    logger.info("----------------------------------------------------")
 
     if len(feeds) != 0:
         user_feed_info = {}
@@ -160,12 +162,12 @@ def send_new_feeds_notification_for_creators():
 
         user_subscribers_data = cursor.fetchall()
 
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
         affected_count = cursor.rowcount
-        print(f"{affected_count} rows affected")
-        print("DB DATA : ", user_subscribers_data)
-        print("----------------------------------------------------")
+        logger.info(f"{affected_count} rows affected")
+        logger.info("DB DATA : %s", user_subscribers_data)
+        logger.info("----------------------------------------------------")
 
         subscribers_email_data = {}
 
@@ -196,7 +198,7 @@ def send_new_feeds_notification_for_creators():
                 send_mail(emailData, "feeds.html")
 
     else:
-        print("============= NO NEW FEEDS FOUND IN LAST 24 HOURS =================")
+        logger.info("============= NO NEW FEEDS FOUND IN LAST 24 HOURS =================")
 
     cursor.close()
 
@@ -205,7 +207,7 @@ def send_new_feeds_notification_for_creators():
 @cron_schedular.scheduled_job(trigger="interval", minutes=CRON_TIME_FLAGGED_COMMENTS_MINUTES)
 def set_flag_status_for_comments():
 
-    print(
+    logger.info(
         "******************* CRON for setting flag status for comments ********************"
     )
     affected_count = 0
@@ -217,13 +219,13 @@ def set_flag_status_for_comments():
         cursor.execute(fetchAllCommentsquery)
         affected_count = cursor.rowcount
         comment_data = cursor.fetchall()
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
-        print("DB DATA : ", comment_data)
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
+        logger.info("DB DATA : %s", comment_data)
 
     except Exception as e:
-        print(e)
+        logger.info(e)
         conn.rollback()
 
     updateFlagStatusQuery = (
@@ -236,14 +238,14 @@ def set_flag_status_for_comments():
                 cursor.execute(updateFlagStatusQuery, (comment[0],))
                 conn.commit()
                 affected_count = cursor.rowcount
-                print(cursor.query.decode())
-                print(f"{affected_count} rows affected")
+                logger.info(cursor.query.decode())
+                logger.info(f"{affected_count} rows affected")
 
             except Exception as e:
-                print(e)
+                logger.info(e)
                 conn.rollback()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
     cursor.close()
 
 
@@ -251,7 +253,7 @@ def set_flag_status_for_comments():
 @cron_schedular.scheduled_job(trigger="interval", minutes=CRON_TIME_FLAGGED_FEEDS_MINUTES)
 def set_flag_status_for_feeds():
 
-    print(
+    logger.info(
         "***************** CRON for setting flag status for feeds *******************"
     )
     affected_count = 0
@@ -263,13 +265,13 @@ def set_flag_status_for_feeds():
         cursor.execute(fetchAllFeedsquery)
         affected_count = cursor.rowcount
         feed_data = cursor.fetchall()
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
-        print("DB DATA : ", feed_data)
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
+        logger.info("DB DATA : %s", feed_data)
 
     except Exception as e:
-        print(e)
+        logger.info(e)
         conn.rollback()
 
     updateFlagStatusQuery = "UPDATE task_list SET is_flagged = 1 WHERE task_id = %s"
@@ -280,17 +282,17 @@ def set_flag_status_for_feeds():
                 cursor.execute(updateFlagStatusQuery, (feed[0],))
                 conn.commit()
                 affected_count = cursor.rowcount
-                print(cursor.query.decode())
-                print(f"{affected_count} rows affected")
+                logger.info(cursor.query.decode())
+                logger.info(f"{affected_count} rows affected")
 
             except Exception as e:
-                print(e)
+                logger.info(e)
                 conn.rollback()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
     cursor.close()
 
-print(">>>>>>>>>>>>>> Registered Jobs <<<<<<<<<<<<<<<<<<<<")
+logger.info(">>>>>>>>>>>>>> Registered Jobs <<<<<<<<<<<<<<<<<<<<")
 cron_schedular.print_jobs()
-print(">>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<<<<")
+logger.info(">>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<<<<")
 cron_schedular.start()

@@ -5,6 +5,7 @@ import jwt
 from functools import wraps
 import os
 import requests
+from utils.log_util import get_logger
 
 app = Flask(__name__)
 
@@ -23,17 +24,19 @@ INVALID_AUDIENCE = "INVALID_AUDIENCE"
 PUBLIC_KEY_SERVER_ERROR = "PUBLIC_KEY_SERVER_ERROR"
 SIGNATURE_VERIFICATION_FAILED = "SIGNATURE_VERIFICATION_FAILED"
 
+logger = get_logger(__name__)
+
 @app.before_request
 def before_request_func():
-    print("\n***********************************************")
-    print("REQUEST METHOD: ", request.method)
-    print("REQUEST HEADERS: ", request.headers)
+    logger.info("*****************Request Start******************************")
+    logger.info("REQUEST METHOD: %s", request.method)
+    logger.info("REQUEST HEADERS: %s", request.headers)
         
     if request.method == "GET":
-        print("REQUEST PARAMS: ", request.args)
+        logger.info("REQUEST PARAMS: %s", request.args)
     elif request.method == "POST":
-        print("REQUEST PARAMS: ", request.data)
-        print("REQUESTED FILES: ", request.files)
+        logger.info("REQUEST PARAMS: %s", request.data)
+        logger.info("REQUESTED FILES: %s", request.files)
 
     return authorize_request(request.headers)
 
@@ -48,17 +51,18 @@ def after_request(response):
     header['Access-Control-Allow-Methods'] = '*'
     header['Access-Control-Allow-Credentials'] = "true"
 
-    print("RESPONSE STATUS: ", response.status)
-    print("RESPONSE HEADERS: ", response.headers)
-    print("RESPONSE BODY: ")
-    print(response.data, "\n")
+    logger.info("RESPONSE STATUS: %s", response.status)
+    logger.debug("RESPONSE HEADERS: %s", response.headers)
+    logger.debug("RESPONSE BODY: ")
+    logger.debug("RESPONSE CONTENT: %s", response.data)
+    logger.info("*****************Request End******************************")
     return response
 
 
 def authorize_request(headers):
 
     if 'Authorization' not in headers:
-        print("Authorized token not found in request")
+        logger.error("Authorized token not found in request")
         return jsonify({"error": "Bearer token not found in Authorization Header"}), 401
     
     split_token = headers['Authorization'].split(" ")
@@ -66,7 +70,7 @@ def authorize_request(headers):
     if split_token[0] == "Bearer":
         payload = decode_auth_token(split_token[1])
     else:
-        print("[Error]: Token not in valid format")
+        logger.error("Token not in valid format")
         return jsonify({"error": "Invalid token format"}), 401
     
     if payload == SIGNATURE_EXPIRED or payload == INVALID_ISSUER or payload == INVALID_AUDIENCE or payload == INVALID_TOKEN or payload == PUBLIC_KEY_SERVER_ERROR or payload == SIGNATURE_VERIFICATION_FAILED:
@@ -74,7 +78,7 @@ def authorize_request(headers):
             "error": payload
             }), 401
     
-    print("Request is Authorized")
+    logger.info("Request is Authorized")
     # set user data in request context 
     g.loggedInUserData = {
         "user_id": payload["sub"],
@@ -84,7 +88,7 @@ def authorize_request(headers):
         "firstname": payload["given_name"],
         "lastname": payload["family_name"]
     }
-    print(g.loggedInUserData)
+    logger.debug(g.loggedInUserData)
 
 def decode_auth_token(auth_token):
     """
@@ -101,19 +105,19 @@ def decode_auth_token(auth_token):
         payload = jwt.decode(auth_token, secret_key, audience=app.config.get('AUDIENCE_CLAIM'), issuer=app.config.get('TOKEN_ISSUER'), algorithms='RS256')
         return payload
     except jwt.ExpiredSignatureError:
-        print('Signature expired. Please log in again.')
+        logger.error('Signature expired. Please log in again.')
         return SIGNATURE_EXPIRED
     except jwt.InvalidIssuerError:
-        print('Invalid Issuer found. Please log in again.')
+        logger.error('Invalid Issuer found. Please log in again.')
         return INVALID_ISSUER
     except jwt.InvalidAudienceError:
-        print('Invalid Audience found. Please log in again.')
+        logger.error('Invalid Audience found. Please log in again.')
         return INVALID_AUDIENCE
     except jwt.InvalidSignatureError:
-        print('Signature verification failed. Please log in again.')
+        logger.error('Signature verification failed. Please log in again.')
         return SIGNATURE_VERIFICATION_FAILED
     except jwt.InvalidTokenError:
-        print('Invalid token. Please log in again.')
+        logger.error('Invalid token. Please log in again.')
         return INVALID_TOKEN
 
 def get_public_key_server():
@@ -123,10 +127,10 @@ def get_public_key_server():
                 timeout=60,
             )
         if authorization_server_response.status_code != 200:
-            print("Error in fetching public key from server")
+            logger.error("Error in fetching public key from server")
             return None
 
         return authorization_server_response.json()["public_key"]
     except Exception as e:
-        print(e) 
+        logger.error(e) 
         return None

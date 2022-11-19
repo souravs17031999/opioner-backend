@@ -11,12 +11,15 @@ import os
 import psycopg2
 import subprocess
 import requests
+from utils.log_util import get_logger
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 notification = Blueprint("notification", __name__)
+logger = get_logger(__name__)
+
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
 if os.getenv("DATABASE_URL") != "":
     DATABASE_URL = os.getenv("DATABASE_URL")
@@ -54,21 +57,21 @@ def send_sendgrid_mail(emailData, template_name):
         subject = emailData["subject"]
     else:
         subject = ""
-        print("[WARNING]: Subject not present, sending mail with empty subject")
+        logger.info("[WARNING]: Subject not present, sending mail with empty subject")
 
     if "user_email" in emailData:
         receiver_email = emailData["user_email"]
     else:
-        print("[WARNING]: Receiver email not found in request")
+        logger.info("[WARNING]: Receiver email not found in request")
         return {
             "status": "failure",
             "message": "Email notification failed due to receiver email's not found",
         }
 
-    print("SENDER EMAIL : ", sender_email)
-    print("RECEIVER EMAIL : ", receiver_email)
-    print("Subject: ", subject)
-    print("EmailData: ", emailData)
+    logger.info("SENDER EMAIL : ", sender_email)
+    logger.info("RECEIVER EMAIL : ", receiver_email)
+    logger.info("Subject: ", subject)
+    logger.info("EmailData: ", emailData)
 
     mail_body = generate_mail_content(template_name, emailData=emailData)
     message = Mail(
@@ -82,13 +85,13 @@ def send_sendgrid_mail(emailData, template_name):
         sendgridAPIClientKey = SENDGRID_API_KEY_PROD
         sg = SendGridAPIClient(sendgridAPIClientKey)
         response = sg.send(message)
-        print(response.status_code)
+        logger.info(response.status_code)
     except Exception as e:
-        print(e)
-        print("failure !")
+        logger.info(e)
+        logger.info("failure !")
         return {"status": "failure", "message": "Email reminder sending failed !"}
 
-    print("success !")
+    logger.info("success !")
     return {
         "status": "success",
         "message": "Email reminder to user send successfully !",
@@ -116,23 +119,23 @@ def health_check_notification_service():
         if subprocess_output.returncode != 0:
             POSTGRES_SUCCESS = False
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     try:
-        print(
-            "[debug] Requesting to SendGrid: ",
+        logger.info(
+            "[debug] Requesting to SendGrid: %s",
             SENDGRID_STATUS_API,
         )
         sendgridResponse = requests.get(
             SENDGRID_STATUS_API,
             timeout=10,
         )
-        print("[debug] sendgrid-service status: ", sendgridResponse)
-        print("[debug] sendgrid-service response: ", sendgridResponse.text)
+        logger.info("[debug] sendgrid-service status: %s", sendgridResponse)
+        logger.info("[debug] sendgrid-service response: %s", sendgridResponse.text)
         if sendgridResponse.status_code != 200 or (sendgridResponse.components[0].name == "Mail Sending" and sendgridResponse.components[0].status != "operational"):
             SENDGRID_SUCCESS = False 
     except Exception as e:
-        print(e)
+        logger.info(e)
 
     return jsonify({
         "status" : "success", 
@@ -148,7 +151,7 @@ def send_email_notifications_for_user():
     templateName = post_request["template_name"]
     serviceName = post_request["service"]
     response = {}
-    print("====== serving for service: ", serviceName)
+    logger.info("====== serving for service: %s", serviceName)
     if send_sendgrid_mail(emailData, templateName)["status"] == "success":
         response["status"] = "success"
         response["message"] = "Email notifications send to user successfully !"
@@ -183,26 +186,26 @@ def insert_notifications_for_user(loggedInUser):
         )
         conn.commit()
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
+        logger.info("DB DATA : %s", db_data)
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         selectQuery = "SELECT * FROM user_notifications WHERE user_id = %s"
         cursor.execute(selectQuery, (user_id,))
 
         affected_count = cursor.rowcount
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
+        logger.info("DB DATA : %s", db_data)
 
         cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     response = {}
     if affected_count == 0:
@@ -233,15 +236,15 @@ def fetch_notifications_for_user(loggedInUser):
     try:
         cursor.execute(allSelectQuery, (user_id,))
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         all_db_data = cursor.fetchall()
-        print("DB DATA : ", all_db_data)
+        logger.info("DB DATA : %s", all_db_data)
         total_notifications = len(all_db_data)
 
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         cursor.close()
 
@@ -306,17 +309,17 @@ def fetch_unread_count_notifications_for_user(loggedInUser):
     try:
         cursor.execute(selectQuery, (user_id,))
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
+        logger.info("DB DATA : %s", db_data)
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     response = {}
     response["status"] = "success"
@@ -345,17 +348,17 @@ def update_read_status_notifications_for_user(loggedInUser):
         cursor.execute(updateQuery, (user_id, event_id))
         conn.commit()
         affected_count = cursor.rowcount
-        print("----------------------------------------------------")
-        print(cursor.query.decode())
-        print(f"{affected_count} rows affected")
+        logger.info("----------------------------------------------------")
+        logger.info(cursor.query.decode())
+        logger.info(f"{affected_count} rows affected")
         db_data = cursor.fetchone()
-        print("DB DATA : ", db_data)
+        logger.info("DB DATA : %s", db_data)
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         cursor.close()
 
-    print("----------------------------------------------------")
+    logger.info("----------------------------------------------------")
 
     response = {}
 
