@@ -4,4 +4,4 @@ test.js
 --recursive
 -- bail
 --exit 
--t 30000
+-t 120000
