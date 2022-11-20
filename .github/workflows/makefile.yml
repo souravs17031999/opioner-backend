@@ -10,6 +10,10 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    
+    env:
+      KEYCLOAK_CLIENT_SECRET: ${{secrets.KEYCLOAK_CLIENT_SECRET}}
+      KEYCLOAK_USER_PASSWORD: ${{secrets.KEYCLOAK_USER_PASSWORD}}
 
     steps:
     - uses: actions/checkout@v3
