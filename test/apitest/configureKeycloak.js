@@ -8,7 +8,10 @@ var supertest = require("supertest");
 
 var iamApi = supertest.agent(keycloakUrl)
 
-q.longStackSupport = true // pain_during_debug--
+let clientSecret = process.env.KEYCLOAK_CLIENT_SECRET
+let password = process.env.KEYCLOAK_USER_PASSWORD
+
+q.longStackSupport = true
 
 function waitForKeycloak() {
     let deferred = q.defer()
@@ -45,9 +48,9 @@ function getAuthUserToken() {
     console.log(">>>>>>>>>>>>>>>> getting Test User Auth token ")
     const requestData = {
         "client_id": "app-test-client",
-        "client_secret": "FTlIovCjLL6nCU02mk7aPCZQ0wXDqHYm",
+        "client_secret": clientSecret,
         "username": "app-test",
-        "password": "3WUzX-+&h=8IV%W",
+        "password": password,
         "grant_type": "password"
     }
     request({

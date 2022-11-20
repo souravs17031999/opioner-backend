@@ -21,5 +21,7 @@ services:
       - PRODUCTSERVICEHOST=http://product_service:8083/product
       - NOTIFICATIONSERVICEHOST=http://notification_service:8084/notification
       - KEYCLOAK_SERVER_URL=https://keycloak-opioner.herokuapp.com/auth
-      - TEST_SUITE_DIR
+      - KEYCLOAK_CLIENT_SECRET
+      - KEYCLOAK_USER_PASSWORD
+      - TEST_SUITE_DIR=apitest
       - HEROKU_API_KEY
