@@ -8,8 +8,9 @@
 
 # This project is meant to maintain the backend code for the [Opioner - MAKE YOUR OPINION COUNT AND SHARE WITH WORLD](https://souravs17031999.github.io/opioner-home).
 
-Currently, the project is deployed using Heroku servers and all requests are served through Heroku API gateway.
-Frontend of [Opioner app](https://github.com/souravs17031999/opioner-home) is served through Github pages but is planned to deploy through AWS in future.
+Currently, the project is deployed using ```Render``` servers and all requests are served through ```Render``` API gateway.  
+Earlier, This was done through ```Heroku```.   
+Frontend of [Opioner app](https://github.com/souravs17031999/opioner-home) is served through ```Render``` pages but is planned to deploy through AWS in future.
 
 ## Running application locally:
   
@@ -66,16 +67,20 @@ or
 
 ### Deployment via CI/CD:
 
-- Deployment pipeline follows the deployment via Heroku CI/CD docker container registries to deliver the end product.
+@Live  
+- Deployment pipeline follows the deployment via ```Render``` CI/CD docker container registries to deliver the end product.   
 - Tests are integrated in the pipeline (preferably Jenkins pipeline) before and after the delivery of end product to make sure we deliver the value of the product without
 breaking existing functionality.
+
+@Deprecated  
+- Deployment pipeline follows the deployment via Heroku CI/CD docker container registries to deliver the end product.
 - Run `make heroku_deploy` to deploy to Heroku cluster.
 
 ### Github CI pipeline:
 - Every push to master branch triggers github Makefile CI actions workflow which builds, test and deploy container images.
 - Additional code quality checks via [SONAR quality checks](https://sonarcloud.io/project/overview?id=souravs17031999_opioner-backend) have been integrated.
 
-@deprecated
+@Deprecated
 ### New Relic Monitoring
 - We already have integrated new relic monitoring dashboards but configuration file `newrelic.ini` will have to be provided (inserted at each service root dir) 
   and set `APM_MONITORING_NEWRELIC` to "True" to start application service with monitoring enabled.
@@ -93,6 +98,9 @@ breaking existing functionality.
   so as to making rendering smooth, limit the time on API response (database query) and overall avoiding network timeouts/delays.  
   
 ### Databases (volume persistence)
+@Live  
+- This project now uses ```Supabase``` managed Postgres Databases.  
+@Deprecated  
 - Currently, I have explored and made available instances of [Heroku postgresDB](https://devcenter.heroku.com/articles/heroku-postgresql) and [Amazon RDS postgresDB](https://aws.amazon.com/rds/postgresql/) in production. 
 - For developmental debugging, volumes persistence (bind mounts/named volumes) is included in docker-compose.yml (using docker-compose)  
 
