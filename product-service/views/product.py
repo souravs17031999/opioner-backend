@@ -14,6 +14,7 @@ logger = get_logger(__name__)
 DATABASE_URL = f"postgres://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}/{os.getenv('PGDATABASE')}"
 if os.getenv("DATABASE_URL") != "":
     DATABASE_URL = os.getenv("DATABASE_URL")
+
 conn = psycopg2.connect(DATABASE_URL)
 
 @product.route("/status/live", methods=["GET", "POST"])
@@ -74,7 +75,7 @@ def fetch_user_list(loggedInUser):
         logger.info(f"{affected_count} rows affected")
         conn.commit()
     except Exception as e:
-        logger.info(e)
+        logger.error(e)
     finally:
         cursor.close()
 

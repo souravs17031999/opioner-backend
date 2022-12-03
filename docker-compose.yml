@@ -18,6 +18,7 @@ services:
       - PGUSER
       - PGPASSWORD
       - PGDATABASE
+      - PGPORT
       - REQUIRE_DB_INSERT
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
@@ -50,6 +51,7 @@ services:
       - PGUSER
       - PGPASSWORD
       - PGDATABASE
+      - PGPORT
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
       - LOG_LEVEL
@@ -74,6 +76,7 @@ services:
       - PGUSER
       - PGPASSWORD
       - PGDATABASE
+      - PGPORT
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
       - PORT
@@ -98,6 +101,7 @@ services:
       - PGUSER
       - PGPASSWORD
       - PGDATABASE
+      - PGPORT
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
       - SENDGRID_API_KEY_PROD
@@ -123,6 +127,7 @@ services:
       - PGUSER
       - PGPASSWORD
       - PGDATABASE
+      - PGPORT
       - ALLOWED_ORIGIN_HOST_PROD
       - TEST_JENKINS_BUILD
       - SENDGRID_API_KEY_PROD

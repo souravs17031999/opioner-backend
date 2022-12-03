@@ -1,7 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env sh
+
 echo "------------------------- WAITING FOR SERVER FOR POSTGRES DB STARTED -------------------------"
 
-while ! pg_isready -h $PGHOST
+while ! pg_isready -h $PGHOST -p $PGPORT
 do
     echo "waiting for database to start...."
     sleep 1
