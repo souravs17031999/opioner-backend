@@ -31,13 +31,12 @@ def before_request_func():
     logger.info("REQUEST METHOD: %s", request.method)
     logger.info("REQUEST HEADERS: %s", request.headers)
         
-    if request.method == "GET":
-        logger.info("REQUEST PARAMS: %s", request.args)
-    elif request.method == "POST":
-        logger.info("REQUEST PARAMS: %s", request.data)
-        logger.info("REQUESTED FILES: %s", request.files)
+    logger.info("REQUEST PARAMS: %s", request.args)
+    logger.info("REQUEST PARAMS: %s", request.data)
+    logger.info("REQUESTED FILES: %s", request.files)
 
-    return authorize_request(request.headers)
+    if request.method != "OPTIONS":
+        return authorize_request(request.headers)
 
 
 @app.after_request
