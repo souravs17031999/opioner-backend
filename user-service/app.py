@@ -32,13 +32,12 @@ def before_request_func():
     logger.info("REQUEST METHOD: %s", request.method)
     logger.info("REQUEST HEADERS: %s", request.headers)
         
-    if request.method == "GET":
-        logger.info("REQUEST PARAMS: %s", request.args)
-    elif request.method == "POST":
-        logger.info("REQUEST PARAMS: %s", request.data)
-        logger.info("REQUESTED FILES: %s", request.files)
+    logger.info("REQUEST PARAMS: %s", request.args)
+    logger.info("REQUEST PARAMS: %s", request.data)
+    logger.info("REQUESTED FILES: %s", request.files)
 
-    return authorize_request(request.headers)
+    if request.method != "OPTIONS":
+        return authorize_request(request.headers)
 
 
 @app.after_request
@@ -116,9 +115,8 @@ def decode_auth_token(auth_token):
     except jwt.InvalidSignatureError:
         logger.error('Signature verification failed. Please log in again.')
         return SIGNATURE_VERIFICATION_FAILED
-    except Exception as e:
+    except jwt.InvalidTokenError:
         logger.error('Invalid token. Please log in again.')
-        logger.error('Error: %s', e)
         return INVALID_TOKEN
 
 def get_public_key_server():
