@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: user-service
+    runtime: docker
+    repo: https://github.com/souravs17031999/opioner-backend
+    branch: master
+    rootDir: ./user-service
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - fromGroup: opioner-service-env
+  - type: web
+    name: product-service
+    runtime: docker
+    repo: https://github.com/souravs17031999/opioner-backend
+    branch: master
+    rootDir: ./product-service
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - fromGroup: opioner-service-env
+  - type: web
+    name: notification-service
+    runtime: docker
+    repo: https://github.com/souravs17031999/opioner-backend
+    branch: master
+    rootDir: ./notification-service
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - fromGroup: opioner-service-env
+  
